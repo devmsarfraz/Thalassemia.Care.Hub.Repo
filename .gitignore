@@ -1,0 +1,58 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build directories
+bin/
+obj/
+out/
+venv/
+.venv/
+
+# ASP.NET Core / .NET
+*.dll
+*.exe
+*.pdb
+*.app
+*.db
+*.sqlite
+*.cache
+
+# EF Core Migrations (optional if you want to ignore migrations)
+# Migrations/
+# *.Designer.cs
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userprefs
+
+# NuGet packages
+*.nupkg
+packages/
+# NuGet v3
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Visual Studio Code
+.vscode/
+
+# Rider IDE
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Secret / env files
+appsettings.*.json
+secrets.json
+.env

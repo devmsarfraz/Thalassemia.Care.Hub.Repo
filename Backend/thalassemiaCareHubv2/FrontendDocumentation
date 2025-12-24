@@ -1,0 +1,1377 @@
+# Thalassemia Care Hub - Frontend Flow Documentation
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Technology Stack](#technology-stack)
+3. [Application Architecture](#application-architecture)
+4. [Authentication Flow](#authentication-flow)
+5. [User Interface Structure](#user-interface-structure)
+6. [Component Hierarchy](#component-hierarchy)
+7. [State Management](#state-management)
+8. [Routing Structure](#routing-structure)
+9. [Complete User Flows](#complete-user-flows)
+10. [API Integration Patterns](#api-integration-patterns)
+11. [Error Handling & Validation](#error-handling--validation)
+12. [Responsive Design Guidelines](#responsive-design-guidelines)
+13. [Security Implementation](#security-implementation)
+
+---
+
+## Overview
+
+The Thalassemia Care Hub frontend is built with **React.js** and **Bootstrap** to provide a responsive, user-friendly interface for patients, caregivers, and administrators. This document outlines the complete flow of how users interact with the application, how data is managed, and how the frontend integrates with the ASP.NET Core backend API.
+
+### Key Features
+- **Authentication & Authorization**: Secure login/logout with JWT tokens
+- **AI Chatbot**: Real-time chat interface with DeepSeek AI integration
+- **Community Forum**: Post creation, commenting, and interaction
+- **News & Information**: Admin-managed news posts
+- **User Profile Management**: Profile viewing and editing
+- **Caregiver-Patient Association**: Linking caregivers to patients
+- **Role-Based Access Control**: Different interfaces for Patient, Caregiver, and Admin
+
+---
+
+## Technology Stack
+
+### Core Technologies
+- **React.js** (v18+): UI framework
+- **React Router** (v6+): Client-side routing
+- **Axios**: HTTP client for API calls
+- **Bootstrap 5**: CSS framework for responsive design
+- **React Context API**: Global state management
+- **LocalStorage**: Token and user data persistence
+
+### Additional Libraries
+- **React Hook Form**: Form handling and validation
+- **React Toastify**: Toast notifications
+- **Date-fns**: Date formatting and manipulation
+- **React Icons**: Icon library
+
+---
+
+## Application Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│           Frontend Application                  │
+├─────────────────────────────────────────────────┤
+│                                                  │
+│  ┌──────────────┐    ┌──────────────────┐     │
+│  │   Router     │───▶│  Page Components │     │
+│  └──────────────┘    └──────────────────┘     │
+│         │                      │                 │
+│         ▼                      ▼                 │
+│  ┌──────────────┐    ┌──────────────────┐     │
+│  │ Auth Context │    │  Feature Contexts │     │
+│  └──────────────┘    └──────────────────┘     │
+│         │                      │                 │
+│         └──────────┬───────────┘                 │
+│                    ▼                              │
+│            ┌──────────────┐                      │
+│            │  API Service │                      │
+│            │    Layer     │                      │
+│            └──────────────┘                      │
+│                    │                              │
+└────────────────────┼────────────────────────────┘
+                     │
+                     ▼
+            ┌──────────────┐
+            │   Backend   │
+            │  API (ASP  │
+            │  .NET Core)│
+            └────────────┘
+```
+
+---
+
+## Authentication Flow
+
+### 1. User Registration Flow
+
+```
+┌─────────────┐
+│  User Lands │
+│  on Signup  │
+│   Page      │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ User Fills Registration Form            │
+│ - Email                                 │
+│ - Password                              │
+│ - First Name, Last Name                 │
+│ - Phone Number (optional)               │
+│ - Address (optional)                    │
+│ - Blood Group (optional)                │
+│ - Role Selection (Patient/Caregiver)    │
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ Frontend Validates Form                 │
+│ - Email format                          │
+│ - Password strength                     │
+│ - Required fields                        │
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ POST /api/auth/signup                   │
+│ { email, password, firstName, ... }    │
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ Backend Response                        │
+│ ✅ Success: { message: "Signup..." }   │
+│ ❌ Error: { message: "User exists..." }│
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ ✅ Success → Redirect to Login Page    │
+│ ❌ Error → Display Error Message       │
+└─────────────────────────────────────────┘
+```
+
+### 2. User Login Flow
+
+```
+┌─────────────┐
+│  Login Page │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ User Enters Credentials                 │
+│ - Email                                 │
+│ - Password                              │
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ POST /api/auth/login                   │
+│ { email, password }                     │
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ Backend Response                        │
+│ {                                      │
+│   success: true,                       │
+│   message: "Login successful!",        │
+│   token: "eyJhbGci...",                │
+│   expiresAt: "2024-01-01T12:00:00Z",  │
+│   user: { userId, email, firstName... }│
+│ }                                      │
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ Frontend Stores:                       │
+│ - Token in localStorage                 │
+│ - Expiry time in localStorage           │
+│ - User data in Context/State           │
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ Set Authorization Header for Future     │
+│ Requests:                               │
+│ Authorization: Bearer <token>           │
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ Redirect to Dashboard/Home Page        │
+└─────────────────────────────────────────┘
+```
+
+; ### 3. Protected Route Access Flow
+
+; ```
+; ┌─────────────────────────────────────────┐
+; │ User Tries to Access Protected Route   │
+; └──────┬──────────────────────────────────┘
+;        │
+;        ▼
+; ┌─────────────────────────────────────────┐
+; │ Check localStorage for Token           │
+; └──────┬──────────────────────────────────┘
+;        │
+;        ├─── Token Exists? ──── YES ────┐
+;        │                                  │
+;        ▼                                  │
+; ┌─────────────────────────────────────────┐
+; │ Validate Token Expiry                  │
+; │ Check expiresAt timestamp               │
+; └──────┬──────────────────────────────────┘
+;        │
+;        ├─── Token Valid? ──── YES ────┐
+;        │                               │
+;        ▼                               │
+; ┌─────────────────────────────────────────┐
+; │ ✅ Allow Access to Route               │
+; │ Load User Data from Context            │
+; └─────────────────────────────────────────┘
+;        │
+;        NO
+;        │
+;        ▼
+; ┌─────────────────────────────────────────┐
+; │ ❌ Redirect to Login Page            │
+; │ Clear localStorage                   │
+; │ Show Message: "Session Expired"      │
+; └──────────────────────────────────────┘
+; ```
+
+### 4. Logout Flow
+
+```
+┌─────────────────────────────────────────┐
+│ User Clicks Logout Button              │
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ POST /api/auth/logout                   │
+│ (Optional - stateless JWT doesn't      │
+│  require server-side logout)            │
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ Frontend Actions:                       │
+│ - Remove token from localStorage        │
+│ - Remove user data from Context        │
+│ - Clear axios default headers           │
+└──────┬──────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ Redirect to Login Page                  │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## User Interface Structure
+
+### Main Layout Structure
+
+```
+App
+├── Header (Navigation Bar)
+│   ├── Logo
+│   ├── Navigation Links
+│   │   ├── Home
+│   │   ├── Community
+│   │   ├── News
+│   │   ├── Chat
+│   │   └── Profile (if logged in)
+│   └── Auth Buttons
+│       ├── Login (if not logged in)
+│       ├── Signup (if not logged in)
+│       └── Logout (if logged in)
+│
+├── Sidebar (Mobile/Tablet)
+│   └── Collapsible Navigation Menu
+│
+├── Main Content Area
+│   ├── Home Page (/)
+│   ├── Login Page (/login)
+│   ├── Signup Page (/signup)
+│   ├── Dashboard (/dashboard)
+│   ├── Community Forum (/community)
+│   ├── News & Information (/news)
+│   ├── AI Chatbot (/chat)
+│   ├── User Profile (/profile)
+│   └── Admin Dashboard (/admin) - Admin only
+│
+└── Footer
+    ├── About
+    ├── Contact
+    └── Links
+```
+
+---
+
+## Component Hierarchy
+
+### Root Component Structure
+
+```
+App.js
+│
+├── AuthProvider (Context)
+│   │
+│   ├── BrowserRouter
+│   │   │
+│   │   ├── Header (always visible)
+│   │   │   ├── Navigation Links
+│   │   │   └── User Menu
+│   │   │
+│   │   ├── Routes
+│   │   │   ├── Public Routes
+│   │   │   │   ├── Home (/)
+│   │   │   │   ├── Login (/login)
+│   │   │   │   └── Signup (/signup)
+│   │   │   │
+│   │   │   └── Protected Routes
+│   │   │       ├── Dashboard (/dashboard)
+│   │   │       ├── Community (/community)
+│   │   │       ├── News (/news)
+│   │   │       ├── Chat (/chat)
+│   │   │       ├── Profile (/profile/:id)
+│   │   │       └── Admin Dashboard (/admin)
+│   │   │
+│   │   └── Footer (always visible)
+│   │
+│   └── ToastContainer (notifications)
+```
+
+### Key Components
+
+#### 1. Authentication Components
+```
+auth/
+├── Login.jsx
+│   ├── LoginForm
+│   └── ErrorDisplay
+│
+├── Signup.jsx
+│   ├── SignupForm
+│   ├── RoleSelector
+│   └── ValidationMessages
+│
+└── ProtectedRoute.jsx
+    └── Route Guard Logic
+```
+
+#### 2. Community Components
+```
+community/
+├── CommunityPage.jsx
+│   ├── PostList
+│   │   ├── PostCard
+│   │   │   ├── PostHeader (title, author, date)
+│   │   │   ├── PostContent
+│   │   │   ├── PostMedia (images/videos)
+│   │   │   └── PostActions (like, comment, share)
+│   │   └── Pagination
+│   │
+│   ├── CreatePostModal
+│   │   ├── PostForm
+│   │   └── MediaUpload
+│   │
+│   └── PostDetail.jsx
+│       ├── FullPost
+│       ├── CommentSection
+│       │   ├── CommentList
+│       │   └── CommentForm
+│       └── RelatedPosts
+```
+
+#### 3. Chat Components
+```
+chat/
+├── ChatPage.jsx
+│   ├── ChatSidebar
+│   │   ├── SessionList
+│   │   │   ├── ChatSessionItem
+│   │   │   └── NewSessionButton
+│   │   └── SessionSearch
+│   │
+│   └── ChatWindow
+│       ├── ChatHeader
+│       │   ├── SessionTitle
+│       │   └── SessionActions (delete, rename)
+│       │
+│       ├── MessageList
+│       │   ├── UserMessage
+│       │   ├── BotMessage
+│       │   └── LoadingIndicator
+│       │
+│       └── ChatInput
+│           ├── MessageInput
+│           └── SendButton
+```
+
+#### 4. News Components
+```
+news/
+├── NewsPage.jsx
+│   ├── NewsList
+│   │   ├── NewsCard
+│   │   │   ├── NewsImage
+│   │   │   ├── NewsTitle
+│   │   │   ├── NewsExcerpt
+│   │   │   └── NewsDate
+│   │   └── Pagination
+│   │
+│   └── NewsDetail.jsx
+│       ├── FullArticle
+│       └── RelatedNews
+│
+└── AdminNewsPanel.jsx (Admin only)
+    ├── CreateNewsForm
+    ├── EditNewsForm
+    └── NewsManagement
+```
+
+#### 5. Profile Components
+```
+profile/
+├── ProfilePage.jsx
+│   ├── ProfileHeader
+│   │   ├── Avatar
+│   │   ├── UserName
+│   │   └── RoleBadge
+│   │
+│   ├── ProfileTabs
+│   │   ├── PersonalInfo
+│   │   ├── EditProfile
+│   │   ├── ChangePassword
+│   │   └── Associations (Caregiver/Patient)
+│   │
+│   └── ProfileActions
+│       ├── EditButton
+│       └── DeleteAccount (with confirmation)
+```
+
+#### 6. Admin Components
+```
+admin/
+├── AdminDashboard.jsx
+│   ├── StatsCards
+│   │   ├── TotalUsers
+│   │   ├── TotalPosts
+│   │  
+│   │
+│   ├── UserManagement
+│   │   ├── UserList
+│   │   ├── UserFilters
+│   │   └── RoleUpdateModal
+│   │
+│   └── NewsManagement
+│       └── NewsAdminPanel
+```
+
+---
+
+## State Management
+
+### Context Providers Structure
+
+```javascript
+// AuthContext.js
+{
+  user: {
+    userId: number,
+    email: string,
+    firstName: string,
+    lastName: string,
+    role: string
+  },
+  token: string,
+  isAuthenticated: boolean,
+  isLoading: boolean,
+  login: (email, password) => Promise<void>,
+  logout: () => void,
+  signup: (userData) => Promise<void>,
+  updateProfile: (userData) => Promise<void>
+}
+
+// ChatContext.js
+{
+  sessions: ChatSession[],
+  currentSession: ChatSession | null,
+  messages: ChatMessage[],
+  isLoading: boolean,
+  createSession: (title) => Promise<void>,
+  sendMessage: (sessionId, message) => Promise<void>,
+  loadSessionHistory: (sessionId) => Promise<void>,
+  deleteSession: (sessionId) => Promise<void>
+}
+
+// CommunityContext.js
+{
+  posts: Post[],
+  currentPost: Post | null,
+  comments: Comment[],
+  isLoading: boolean,
+  createPost: (postData) => Promise<void>,
+  updatePost: (postId, postData) => Promise<void>,
+  deletePost: (postId) => Promise<void>,
+  createComment: (postId, comment) => Promise<void>
+}
+
+// NewsContext.js
+{
+  newsPosts: NewsPost[],
+  currentNews: NewsPost | null,
+  isLoading: boolean,
+  loadNews: () => Promise<void>,
+  createNews: (newsData) => Promise<void> // Admin only
+}
+```
+
+---
+
+## Routing Structure
+
+### Route Configuration
+
+```javascript
+// routes.js or App.js
+<Routes>
+  {/* Public Routes */}
+  <Route path="/" element={<Home />} />
+  <Route path="/login" element={<Login />} />
+  <Route path="/signup" element={<Signup />} />
+  
+  {/* Protected Routes */}
+  <Route element={<ProtectedRoute />}>
+    <Route path="/dashboard" element={<Dashboard />} />
+    <Route path="/community" element={<CommunityPage />} />
+    <Route path="/community/post/:id" element={<PostDetail />} />
+    <Route path="/news" element={<NewsPage />} />
+    <Route path="/news/:id" element={<NewsDetail />} />
+    <Route path="/chat" element={<ChatPage />} />
+    <Route path="/profile/:id" element={<ProfilePage />} />
+    <Route path="/profile" element={<Navigate to={`/profile/${user.id}`} />} />
+  </Route>
+  
+  {/* Admin Only Routes */}
+  <Route element={<AdminRoute />}>
+    <Route path="/admin" element={<AdminDashboard />} />
+    <Route path="/admin/users" element={<UserManagement />} />
+    <Route path="/admin/news" element={<NewsManagement />} />
+  </Route>
+  
+  {/* 404 Route */}
+  <Route path="*" element={<NotFound />} />
+</Routes>
+```
+
+---
+
+## Complete User Flows
+
+### Flow 1: New User Registration and First Login
+
+```
+1. User lands on homepage
+   └─> Clicks "Sign Up"
+
+2. Signup Page
+   ├─> Fills form:
+   │   - Email: user@example.com
+   │   - Password: SecurePass123!
+   │   - First Name: John
+   │   - Last Name: Doe
+   │   - Phone: +1234567890
+   │   - Role: Patient
+   └─> Clicks "Register"
+
+3. Frontend Validation
+   ├─> Email format check ✓
+   ├─> Password strength check ✓
+   └─> Required fields check ✓
+
+4. API Call
+   POST /api/auth/signup
+   Body: { email, password, firstName, lastName, phoneNumber, roleID: 1 }
+
+5. Backend Response
+   ✅ { message: "Signup Successful" }
+
+6. UI Feedback
+   └─> Success toast: "Account created! Please login."
+
+7. Redirect
+   └─> Automatic redirect to /login
+
+8. Login Page
+   ├─> Enters credentials
+   └─> Clicks "Login"
+
+9. API Call
+   POST /api/auth/login
+   Body: { email, password }
+
+10. Backend Response
+    ✅ {
+        success: true,
+        token: "eyJhbGci...",
+        expiresAt: "2024-01-01T12:00:00Z",
+        user: { userId: 1, email, firstName, lastName, role: "Patient" }
+      }
+
+11. State Management
+    ├─> Store token in localStorage
+    ├─> Store user data in AuthContext
+    └─> Set axios default header: Authorization: Bearer <token>
+
+12. Redirect
+    └─> Navigate to /dashboard
+
+13. Dashboard Loads
+    └─> Display personalized welcome message
+```
+
+### Flow 2: Creating and Managing Community Posts
+
+```
+1. User navigates to Community Page (/community)
+   └─> Views existing posts
+
+2. Create New Post
+   └─> Clicks "Create Post" button
+
+3. Create Post Modal Opens
+   ├─> Fills form:
+   │   - Title: "Managing Thalassemia Symptoms"
+   │   - Content: "I've been experiencing..."
+   │   - Optional: Upload 2 images
+   └─> Clicks "Post"
+
+4. Frontend Validation
+   ├─> Title required ✓
+   ├─> Content required ✓
+   └─> Image size/format validation ✓
+
+5. API Call
+   POST /api/posts
+   Headers: { Authorization: Bearer <token> }
+   Body: {
+     postTitle: "...",
+     postContent: "...",
+     mediaUrl: ["url1", "url2"]
+   }
+
+6. Backend Response
+   ✅ {
+       postId: 123,
+       postTitle: "...",
+       postContent: "...",
+       userId: 1,
+       creationDate: "2024-01-01T10:00:00Z",
+       media: [...]
+     }
+
+7. UI Update
+   ├─> Close modal
+   ├─> Show success toast
+   └─> Add new post to top of list (optimistic update)
+
+8. View Post Detail
+   └─> User clicks on their post
+
+9. Post Detail Page
+   ├─> Displays full post
+   ├─> Shows all comments
+   └─> User can:
+       ├─> Edit post (if owner)
+       ├─> Delete post (if owner)
+       └─> Add comment
+
+10. Edit Post
+    └─> User clicks "Edit"
+
+11. Edit Form Opens
+    ├─> Pre-filled with current data
+    ├─> User modifies content
+    └─> Clicks "Save"
+
+12. API Call
+    PUT /api/posts/{id}
+    Headers: { Authorization: Bearer <token> }
+    Body: { postTitle: "...", postContent: "..." }
+
+13. Backend Response
+    ✅ Updated post data
+
+14. UI Update
+    └─> Post content updates in real-time
+```
+
+### Flow 3: AI Chatbot Interaction
+
+```
+1. User navigates to Chat Page (/chat)
+   └─> Views chat sidebar with existing sessions
+
+2. Create New Chat Session
+   └─> Clicks "New Chat" button
+
+3. API Call
+   POST /api/chat/session
+   Headers: { Authorization: Bearer <token> }
+   Body: { sessionTitle: "Symptom Check - Jan 1" }
+
+4. Backend Response
+   ✅ {
+       chatSessionId: 456,
+       sessionTitle: "Symptom Check - Jan 1",
+       userId: 1,
+       creationDate: "2024-01-01T11:00:00Z"
+     }
+
+5. UI Update
+   ├─> New session appears in sidebar
+   └─> Chat window opens for new session
+
+6. User Sends Message
+   └─> Types: "What are common thalassemia symptoms?"
+      └─> Clicks "Send"
+
+7. Frontend Action
+   ├─> Display user message in chat immediately
+   └─> Show "AI is typing..." indicator
+
+8. API Call
+   POST /api/chat/session/456/message
+   Headers: { Authorization: Bearer <token> }
+   Body: { messageContent: "What are common thalassemia symptoms?" }
+
+9. Backend Processing
+   ├─> Saves user message to database
+   ├─> Forwards to DeepSeek AI service
+   ├─> Receives AI response
+   └─> Saves AI response to database
+
+10. Backend Response
+    ✅ {
+        userMessage: {
+          messageId: 789,
+          messageContent: "What are common thalassemia symptoms?",
+          senderType: "User",
+          timestamp: "2024-01-01T11:01:00Z"
+        },
+        aiResponse: {
+          messageId: 790,
+          messageContent: "Common thalassemia symptoms include...",
+          senderType: "Bot",
+          timestamp: "2024-01-01T11:01:05Z"
+        }
+      }
+
+11. UI Update
+    ├─> Remove "typing" indicator
+    └─> Display AI response in chat
+
+12. Conversation Continues
+    └─> User can continue asking questions
+        └─> Each message follows same flow (steps 6-11)
+
+13. View Chat History
+    └─> User clicks on previous session in sidebar
+
+14. API Call
+    GET /api/chat/history/{sessionId}
+    Headers: { Authorization: Bearer <token> }
+
+15. Backend Response
+    ✅ {
+        chatSessionId: 456,
+        sessionTitle: "...",
+        messages: [
+          { messageId: 789, content: "...", senderType: "User", ... },
+          { messageId: 790, content: "...", senderType: "Bot", ... },
+          ...
+        ]
+      }
+
+16. UI Update
+    └─> Chat window displays all previous messages
+```
+
+### Flow 4: Admin Creating News Post
+
+```
+1. Admin logs in
+   └─> Role verified as "Admin"
+
+2. Admin navigates to News Management
+   └─> Clicks "Create News Post"
+
+3. Create News Form
+   ├─> Fills:
+   │   - Title: "New Treatment Breakthrough"
+   │   - Content: "Researchers have discovered..."
+   │   - Optional: Upload featured image
+   └─> Clicks "Publish"
+
+4. Frontend Validation
+   ├─> Title required ✓
+   ├─> Content required ✓
+   └─> Admin role check ✓
+
+5. API Call
+   POST /api/news
+   Headers: {
+     Authorization: Bearer <admin_token>,
+     Role: "Admin" (from token claims)
+   }
+   Body: {
+     postTitle: "...",
+     postContent: "...",
+     mediaUrl: "image_url"
+   }
+
+6. Backend Authorization Check
+   ├─> Verifies JWT token
+   ├─> Extracts role from claims
+   └─> Role === "Admin" ? Allow : Deny
+
+7. Backend Response
+   ✅ {
+       newsPostId: 321,
+       postTitle: "...",
+       postContent: "...",
+       publicationDate: "2024-01-01T12:00:00Z",
+       userId: 1,
+       media: [...]
+     }
+
+8. UI Update
+   ├─> Success toast: "News post published!"
+   └─> News post appears in public news feed
+
+9. Regular Users See News
+   └─> When they visit /news, new post appears at top
+```
+
+### Flow 5: Caregiver-Patient Association
+
+```
+1. Caregiver logs in
+   └─> Role: "Caregiver"
+
+2. Caregiver navigates to Profile
+   └─> Clicks "Associate with Patient" tab
+
+3. Association Form
+   ├─> Enters Patient User ID: 5
+   └─> Clicks "Associate"
+
+4. Frontend Validation
+   ├─> Patient ID must be different from Caregiver ID ✓
+   └─> Patient ID must be numeric ✓
+
+5. API Call
+   POST /api/users/associate
+   Headers: { Authorization: Bearer <token> }
+   Body: {
+     caregiverId: 3,
+     patientId: 5
+   }
+
+6. Backend Processing
+   ├─> Verifies both users exist
+   ├─> Checks caregiver role is "Caregiver"
+   ├─> Checks patient role is "Patient"
+   └─> Creates association (sets patient.AssociatedUserId = 3)
+
+7. Backend Response
+   ✅ {
+       success: true,
+       message: "Caregiver-patient association created successfully.",
+       caregiver: { userId: 3, firstName: "Jane", ... },
+       patient: { userId: 5, firstName: "John", ... },
+       associationDetails: "Caregiver (ID: 3) is now associated..."
+     }
+
+8. UI Update
+   ├─> Success toast
+   └─> Profile displays associated patient information
+
+9. Personalized Content
+   └─> Caregiver now sees patient-specific content in dashboard
+```
+
+### Flow 6: User Profile Update
+
+```
+1. User navigates to Profile Page (/profile/1)
+   └─> Views current profile information
+
+2. Click "Edit Profile"
+   └─> Edit form opens with pre-filled data
+
+3. User Updates Information
+   ├─> Changes phone number
+   ├─> Updates address
+   └─> Clicks "Save Changes"
+
+4. Frontend Validation
+   ├─> Phone format validation ✓
+   ├─> Required fields check ✓
+   └─> Email cannot be changed (readonly) ✓
+
+5. API Call
+   PUT /api/users/1
+   Headers: { Authorization: Bearer <token> }
+   Body: {
+     firstName: "John",
+     lastName: "Doe",
+     phoneNumber: "9876543210",
+     address: "New Address"
+   }
+
+6. Backend Response
+   ✅ {
+       userId: 1,
+       email: "user@example.com",
+       firstName: "John",
+       lastName: "Doe",
+       phoneNumber: "9876543210",
+       address: "New Address",
+       role: "Patient"
+     }
+
+7. UI Update
+   ├─> Close edit form
+   ├─> Update profile display
+   └─> Success toast: "Profile updated successfully"
+```
+
+### Flow 7: Commenting on Posts
+
+```
+1. User views Community Post
+   └─> Scrolls to comments section
+
+2. User Types Comment
+   └─> Enters: "This is very helpful, thank you!"
+      └─> Clicks "Post Comment"
+
+3. Frontend Validation
+   └─> Comment content not empty ✓
+
+4. API Call
+   POST /api/posts/123/comments
+   Headers: { Authorization: Bearer <token> }
+   Body: {
+     commentContent: "This is very helpful, thank you!"
+   }
+
+5. Backend Response
+   ✅ {
+       commentId: 456,
+       commentContent: "...",
+       userId: 1,
+       postId: 123,
+       creationDate: "2024-01-01T13:00:00Z",
+       user: {
+         firstName: "John",
+         lastName: "Doe"
+       }
+     }
+
+6. UI Update
+   ├─> Comment appears immediately in comment list
+   └─> Optimistic update with real-time sync
+
+7. Comment Owner Actions
+   └─> User can:
+       ├─> Edit their comment
+       ├─> Delete their comment
+       └─> See "You" badge" on own comments
+```
+
+---
+
+## API Integration Patterns
+
+### Axios Configuration
+
+```javascript
+// api/axiosConfig.js
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_BASE_URL || 'https://localhost:7000/api',
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Request interceptor - Add token to all requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor - Handle token expiry
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('tokenExpiry');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+```
+
+### API Service Layer
+
+```javascript
+// api/authService.js
+import api from './axiosConfig';
+
+export const authService = {
+  login: async (email, password) => {
+    const response = await api.post('/auth/login', { email, password });
+    return response.data;
+  },
+  
+  signup: async (userData) => {
+    const response = await api.post('/auth/signup', userData);
+    return response.data;
+  },
+  
+  logout: async () => {
+    await api.post('/auth/logout');
+  },
+  
+  updatePassword: async (email, currentPassword, newPassword) => {
+    const response = await api.post('/auth/update-password', {
+      email,
+      currentPassword,
+      newPassword
+    });
+    return response.data;
+  }
+};
+
+// api/userService.js
+export const userService = {
+  getProfile: async (userId) => {
+    const response = await api.get(`/users/${userId}`);
+    return response.data;
+  },
+  
+  updateProfile: async (userId, userData) => {
+    const response = await api.put(`/users/${userId}`, userData);
+    return response.data;
+  },
+  
+  getAllUsers: async () => {
+    const response = await api.get('/users');
+    return response.data;
+  },
+  
+  deleteUser: async (userId) => {
+    const response = await api.delete(`/users/${userId}`);
+    return response.data;
+  },
+  
+  associateUser: async (caregiverId, patientId) => {
+    const response = await api.post('/users/associate', {
+      caregiverId,
+      patientId
+    });
+    return response.data;
+  },
+  
+  updateUserRole: async (userId, roleId) => {
+    const response = await api.put(`/users/${userId}/role`, { roleId });
+    return response.data;
+  }
+};
+
+// api/postService.js
+export const postService = {
+  getAllPosts: async () => {
+    const response = await api.get('/posts');
+    return response.data;
+  },
+  
+  getPostById: async (postId) => {
+    const response = await api.get(`/posts/${postId}`);
+    return response.data;
+  },
+  
+  createPost: async (postData) => {
+    const response = await api.post('/posts', postData);
+    return response.data;
+  },
+  
+  updatePost: async (postId, postData) => {
+    const response = await api.put(`/posts/${postId}`, postData);
+    return response.data;
+  },
+  
+  deletePost: async (postId) => {
+    const response = await api.delete(`/posts/${postId}`);
+    return response.data;
+  },
+  
+  createComment: async (postId, comment) => {
+    const response = await api.post(`/posts/${postId}/comments`, comment);
+    return response.data;
+  },
+  
+  getComments: async (postId) => {
+    const response = await api.get(`/posts/${postId}/comments`);
+    return response.data;
+  }
+};
+
+// api/chatService.js
+export const chatService = {
+  createSession: async (sessionTitle) => {
+    const response = await api.post('/chat/session', {
+      sessionTitle
+    });
+    return response.data;
+  },
+  
+  getSessions: async () => {
+    const response = await api.get('/chat/history');
+    return response.data;
+  },
+  
+  getSessionHistory: async (sessionId) => {
+    const response = await api.get(`/chat/history/${sessionId}`);
+    return response.data;
+  },
+  
+  sendMessage: async (sessionId, messageContent) => {
+    const response = await api.post(`/chat/session/${sessionId}/message`, {
+      messageContent
+    });
+    return response.data;
+  },
+  
+  deleteSession: async (sessionId) => {
+    await api.delete(`/chat/session/${sessionId}`);
+  },
+  
+  deleteMessage: async (messageId) => {
+    await api.delete(`/chat/message/${messageId}`);
+  }
+};
+
+// api/newsService.js
+export const newsService = {
+  getAllNews: async () => {
+    const response = await api.get('/news');
+    return response.data;
+  },
+  
+  getNewsById: async (newsId) => {
+    const response = await api.get(`/news/${newsId}`);
+    return response.data;
+  },
+  
+  createNews: async (newsData) => {
+    const response = await api.post('/news', newsData);
+    return response.data;
+  },
+  
+  updateNews: async (newsId, newsData) => {
+    const response = await api.put(`/news/${newsId}`, newsData);
+    return response.data;
+  },
+  
+  deleteNews: async (newsId) => {
+    await api.delete(`/news/${newsId}`);
+  }
+};
+```
+
+---
+
+## Error Handling & Validation
+
+### Error Handling Pattern
+
+```javascript
+// utils/errorHandler.js
+export const handleApiError = (error) => {
+  if (error.response) {
+    // Server responded with error status
+    switch (error.response.status) {
+      case 400:
+        return 'Invalid request. Please check your input.';
+      case 401:
+        return 'Unauthorized. Please login again.';
+      case 403:
+        return 'Access denied. You do not have permission.';
+      case 404:
+        return 'Resource not found.';
+      case 500:
+        return 'Server error. Please try again later.';
+      default:
+        return error.response.data?.message || 'An error occurred.';
+    }
+  } else if (error.request) {
+    // Request made but no response
+    return 'Network error. Please check your connection.';
+  } else {
+    // Error in request setup
+    return 'An unexpected error occurred.';
+  }
+};
+
+// Usage in components
+try {
+  const result = await postService.createPost(postData);
+  toast.success('Post created successfully!');
+} catch (error) {
+  const errorMessage = handleApiError(error);
+  toast.error(errorMessage);
+}
+```
+
+### Form Validation Pattern
+
+```javascript
+// utils/validation.js
+export const validators = {
+  email: (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email) ? null : 'Invalid email format';
+  },
+  
+  password: (password) => {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      return 'Password must contain at least one number';
+    }
+    return null;
+  },
+  
+  phone: (phone) => {
+    const re = /^\+?[\d\s-()]+$/;
+    return re.test(phone) ? null : 'Invalid phone number format';
+  },
+  
+  required: (value, fieldName) => {
+    return value && value.trim() ? null : `${fieldName} is required`;
+  }
+};
+```
+
+---
+
+## Responsive Design Guidelines
+
+### Breakpoints (Bootstrap 5)
+- **Extra Small (xs)**: < 576px (Mobile)
+- **Small (sm)**: ≥ 576px (Large Mobile)
+- **Medium (md)**: ≥ 768px (Tablet)
+- **Large (lg)**: ≥ 992px (Desktop)
+- **Extra Large (xl)**: ≥ 1200px (Large Desktop)
+- **XXL (xxl)**: ≥ 1400px (Extra Large Desktop)
+
+### Component Responsiveness
+
+```javascript
+// Example: Responsive Layout
+<div className="container">
+  <div className="row">
+    {/* Sidebar - Hidden on mobile, visible on desktop */}
+    <aside className="col-md-3 d-none d-md-block">
+      <Sidebar />
+    </aside>
+    
+    {/* Main content - Full width on mobile */}
+    <main className="col-12 col-md-9">
+      <Content />
+    </main>
+  </div>
+</div>
+
+// Mobile Menu Toggle
+<button 
+  className="d-md-none"
+  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+>
+  <MenuIcon />
+</button>
+
+{mobileMenuOpen && (
+  <div className="mobile-menu d-md-none">
+    <Navigation />
+  </div>
+)}
+```
+
+---
+
+## Security Implementation
+
+### Token Management
+
+```javascript
+// utils/tokenManager.js
+export const tokenManager = {
+  setToken: (token, expiresAt) => {
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('tokenExpiry', expiresAt);
+  },
+  
+  getToken: () => {
+    return localStorage.getItem('authToken');
+  },
+  
+  isTokenExpired: () => {
+    const expiry = localStorage.getItem('tokenExpiry');
+    if (!expiry) return true;
+    
+    const expiryDate = new Date(expiry);
+    return expiryDate < new Date();
+  },
+  
+  clearToken: () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('tokenExpiry');
+    localStorage.removeItem('userData');
+  },
+  
+  refreshToken: async () => {
+    // If refresh token mechanism is implemented
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) throw new Error('No refresh token');
+    
+    const response = await api.post('/auth/refresh', { refreshToken });
+    tokenManager.setToken(response.data.token, response.data.expiresAt);
+    return response.data.token;
+  }
+};
+```
+
+### Protected Route Component
+
+```javascript
+// components/ProtectedRoute.jsx
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import tokenManager from '../utils/to

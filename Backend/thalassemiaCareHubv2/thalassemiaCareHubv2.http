@@ -1,0 +1,347 @@
+@thalassemiaCareHubv2_HostAddress = http://localhost:5195
+
+### Test Signup - Password will be automatically encrypted
+POST {{thalassemiaCareHubv2_HostAddress}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "SecurePassword123!",
+  "firstName": "John",
+  "lastName": "Doe",
+  "phoneNumber": "1234567890",
+  "address": "123 Main St",
+  "bloodGroup": "O+",
+  "roleID": 1
+}
+
+### Test Login - Password verification uses secure hashing
+POST {{thalassemiaCareHubv2_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "SecurePassword123!"
+}
+
+### Test Logout
+POST {{thalassemiaCareHubv2_HostAddress}}/api/auth/logout
+Content-Type: application/json
+
+### Test Get All Users (Requires JWT Token)
+GET {{thalassemiaCareHubv2_HostAddress}}/api/users
+Accept: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Test Get User Profile by ID (Requires JWT Token)
+GET {{thalassemiaCareHubv2_HostAddress}}/api/users/1
+Accept: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Test Update User Profile - Complete Update (Requires JWT Token)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/users/1
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "phoneNumber": "9876543210",
+  "address": "456 Oak Avenue, Springfield, IL 62701",
+  "bloodGroup": "A+",
+  "gender": "Male",
+  "guardianName": "Jane Smith",
+  "guardianNumber": "5555555555"
+}
+
+### Test Update User Profile - Minimal Update (only required fields) (Requires JWT Token)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/users/1
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "firstName": "John",
+  "lastName": "Doe"
+}
+
+### Test Update User Profile - Patient with Guardian Info (Requires JWT Token)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/users/2
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "firstName": "Sarah",
+  "lastName": "Johnson",
+  "phoneNumber": "5551234567",
+  "address": "789 Pine Street, Chicago, IL 60601",
+  "bloodGroup": "B-",
+  "gender": "Female",
+  "guardianName": "Michael Johnson",
+  "guardianNumber": "5559876543"
+}
+
+### Test Update User Profile - Adult Patient (no guardian) (Requires JWT Token)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/users/3
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "firstName": "Robert",
+  "lastName": "Wilson",
+  "phoneNumber": "3125551234",
+  "address": "321 Elm Street, Milwaukee, WI 53202",
+  "bloodGroup": "O+",
+  "gender": "Male"
+}
+
+### Test Delete User (Soft Delete) (Requires JWT Token)
+DELETE {{thalassemiaCareHubv2_HostAddress}}/api/users/1
+Accept: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Test Delete Non-existent User (Requires JWT Token)
+DELETE {{thalassemiaCareHubv2_HostAddress}}/api/users/999
+Accept: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Test Update User Role - Admin Only (Requires Admin JWT Token)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/users/1/role
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+{
+  "roleId": 2
+}
+
+### Test Update User Role - Change to Doctor Role (Requires Admin JWT Token)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/users/2/role
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+{
+  "roleId": 3
+}
+
+### Test Update User Role - Change to Admin Role (Requires Admin JWT Token)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/users/3/role
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+{
+  "roleId": 1
+}
+
+### Test Update User Role - Invalid Role ID (Requires Admin JWT Token)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/users/1/role
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+{
+  "roleId": 999
+}
+
+### Test Update User Role - Try to Change Admin Role (Should Fail)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/users/3/role
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+{
+  "roleId": 2
+}
+
+### Test Create Caregiver-Patient Association
+POST {{thalassemiaCareHubv2_HostAddress}}/api/users/associate
+Content-Type: application/json
+
+{
+  "caregiverId": 2,
+  "patientId": 1
+}
+
+### Test Create Caregiver-Patient Association - Same User (Should Fail)
+POST {{thalassemiaCareHubv2_HostAddress}}/api/users/associate
+Content-Type: application/json
+
+{
+  "caregiverId": 1,
+  "patientId": 1
+}
+
+### Test Create Caregiver-Patient Association - Non-existent Users (Should Fail)
+POST {{thalassemiaCareHubv2_HostAddress}}/api/users/associate
+Content-Type: application/json
+
+{
+  "caregiverId": 999,
+  "patientId": 998
+}
+
+### ===========================================
+### COMMUNITY FORUM API TESTS
+### ===========================================
+
+### Test Create Community Post (Requires JWT Token)
+POST {{thalassemiaCareHubv2_HostAddress}}/api/posts
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "postTitle": "Tips for Managing Thalassemia Symptoms",
+  "postContent": "Here are some helpful tips I've learned from my experience with thalassemia..."
+}
+
+### Test Create Community Post - Another Example (Requires JWT Token)
+POST {{thalassemiaCareHubv2_HostAddress}}/api/posts
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "postTitle": "Blood Transfusion Experience",
+  "postContent": "I wanted to share my recent blood transfusion experience and how it went..."
+}
+
+### Test Get All Community Posts
+GET {{thalassemiaCareHubv2_HostAddress}}/api/posts
+Accept: application/json
+
+### Test Get Specific Post by ID
+GET {{thalassemiaCareHubv2_HostAddress}}/api/posts/1
+Accept: application/json
+
+### Test Update Post (Owner Only) (Requires JWT Token)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/posts/1
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "postTitle": "Updated Tips for Managing Thalassemia Symptoms",
+  "postContent": "Here are some updated helpful tips I've learned from my experience with thalassemia..."
+}
+
+### Test Delete Post (Owner Only) (Requires JWT Token)
+DELETE {{thalassemiaCareHubv2_HostAddress}}/api/posts/1
+Accept: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Test Create Comment on Post (Requires JWT Token)
+POST {{thalassemiaCareHubv2_HostAddress}}/api/posts/1/comments
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "commentContent": "Great post! I found this very helpful. Thank you for sharing."
+}
+
+### Test Create Another Comment on Post (Requires JWT Token)
+POST {{thalassemiaCareHubv2_HostAddress}}/api/posts/1/comments
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "commentContent": "I have a similar experience. Would love to connect and share more tips."
+}
+
+### Test Get Comments for Post
+GET {{thalassemiaCareHubv2_HostAddress}}/api/posts/1/comments
+Accept: application/json
+
+### Test Update Comment (Owner Only) (Requires JWT Token)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/posts/comments/1
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "commentContent": "Updated comment: Great post! I found this very helpful. Thank you for sharing your experience."
+}
+
+### Test Delete Comment (Owner Only) (Requires JWT Token)
+DELETE {{thalassemiaCareHubv2_HostAddress}}/api/posts/comments/1
+Accept: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+
+### Test Get Non-existent Post
+GET {{thalassemiaCareHubv2_HostAddress}}/api/posts/999
+Accept: application/json
+
+### Test Update Non-existent Post (Requires JWT Token)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/posts/999
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "postTitle": "This should fail",
+  "postContent": "This post doesn't exist"
+}
+
+### Test Delete Non-existent Post (Requires JWT Token)
+DELETE {{thalassemiaCareHubv2_HostAddress}}/api/posts/999
+Accept: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### ===========================================
+### NEWS & INFORMATION API TESTS
+### ===========================================
+
+### Test Create News Post (Admin Only)
+POST {{thalassemiaCareHubv2_HostAddress}}/api/news
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+{
+  "postTitle": "New Thalassemia Treatment Breakthrough",
+  "postContent": "Researchers have announced a breakthrough in thalassemia treatment that shows promising results in clinical trials...",
+  "reference": "https://medicaljournal.org/thalassemia-breakthrough",
+  "mediaUrl": "https://storage.example.com/files/medical-breakthrough.jpg"
+}
+
+### Test Create News Post - Medical Research Update (Admin Only)
+POST {{thalassemiaCareHubv2_HostAddress}}/api/news
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+{
+  "postTitle": "FDA Approves New Thalassemia Drug",
+  "postContent": "The FDA has approved a new medication for thalassemia patients that significantly reduces the need for frequent blood transfusions...",
+  "reference": "https://fda.gov/thalassemia-drug-approval"
+}
+
+### Test Get All News Posts
+GET {{thalassemiaCareHubv2_HostAddress}}/api/news
+Accept: application/json
+
+### Test Get Specific News Post by ID
+GET {{thalassemiaCareHubv2_HostAddress}}/api/news/1
+Accept: application/json
+
+### Test Update News Post (Admin Only)
+PUT {{thalassemiaCareHubv2_HostAddress}}/api/news/1
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+{
+  "postTitle": "Updated: New Thalassemia Treatment Breakthrough",
+  "postContent": "Updated information: Researchers have announced a breakthrough in thalassemia treatment...",
+  "reference": "https://medicaljournal.org/thalassemia-breakthrough-updated",
+  "mediaUrl": "https://storage.example.com/files/updated-medical-breakthrough.jpg"
+}
+
+### Test Upload Media for News Post (Admin Only)
+POST {{thalassemiaCareHubv2_HostAddress}}/api/news/1/media
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+{
+  "mediaUrl": "https://storage.example.com/files/news-supplementary-image.jpg",
+  "mediaType": "image"
+}
+
+### Test Delete Media Record (Admin Only)
+DELETE {{thalassemiaCareHubv2_HostAddress}}/api/news/media/1
+Accept: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+### Test Delete News Post (Admin Only)
+DELETE {{thalassemiaCareHubv2_HostAddress}}/api/news/1
+Accept: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
