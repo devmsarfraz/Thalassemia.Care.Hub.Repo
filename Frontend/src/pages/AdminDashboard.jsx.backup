@@ -1,0 +1,683 @@
+import { useState, useEffect } from 'react'
+import { Container, Row, Col, Card, Table, Button, Modal, Form, Badge, InputGroup, Image, Spinner, Pagination } from 'react-bootstrap'
+import { usersAPI, newsAPI, uploadAPI } from '../services/api'
+import { toast } from 'react-toastify'
+import { FaUsers, FaNewspaper, FaTrash, FaEdit, FaPlus, FaSearch, FaImage, FaChartLine, FaClock } from 'react-icons/fa'
+import { API_BASE_URL } from '../config/api'
+
+const AdminDashboard = () => {
+  // State
+  const [activeSection, setActiveSection] = useState('users')
+  const [users, setUsers] = useState([])
+  const [newsPosts, setNewsPosts] = useState([])
+  const [filteredUsers, setFilteredUsers] = useState([])
+  const [filteredNews, setFilteredNews] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showNewsModal, setShowNewsModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [newsToDelete, setNewsToDelete] = useState(null)
+  const [newsToEdit, setNewsToEdit] = useState(null)
+  const [newNews, setNewNews] = useState({ postTitle: '', postContent: '', reference: '', mediaUrl: '' })
+  const [editNews, setEditNews] = useState({ postTitle: '', postContent: '', reference: '', mediaUrl: '' })
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [editSelectedFile, setEditSelectedFile] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState(null)
+  const [editPreviewUrl, setEditPreviewUrl] = useState(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Pagination state
+  const [currentPageUsers, setCurrentPageUsers] = useState(1)
+  const [currentPageNews, setCurrentPageNews] = useState(1)
+  const [itemsPerPage] = useState(10)
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  useEffect(() => {
+    filterData()
+  }, [users, newsPosts, searchQuery, activeSection])
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true)
+      const [usersRes, newsRes] = await Promise.all([
+        usersAPI.getAll(),
+        newsAPI.getAll()
+      ])
+      setUsers(usersRes.data)
+      setNewsPosts(newsRes.data)
+    } catch (error) {
+      toast.error('Failed to load data')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filterData = () => {
+    if (activeSection === 'users') {
+      if (searchQuery.trim()) {
+        setFilteredUsers(users.filter(user =>
+          `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchQuery.toLowerCase())
+        ))
+      } else {
+        setFilteredUsers(users)
+      }
+    } else {
+      if (searchQuery.trim()) {
+        setFilteredNews(newsPosts.filter(news =>
+          news.postTitle.toLowerCase().includes(searchQuery.toLowerCase())
+        ))
+      } else {
+        setFilteredNews(newsPosts)
+      }
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setSelectedFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => setPreviewUrl(reader.result)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleCreateNews = async (e) => {
+    e.preventDefault()
+    setIsUploading(true)
+    try {
+      let mediaUrl = newNews.mediaUrl
+      if (selectedFile) {
+        const formData = new FormData()
+        formData.append('file', selectedFile)
+        const uploadResponse = await uploadAPI.uploadFile(formData)
+        mediaUrl = uploadResponse.data.url
+      }
+      await newsAPI.create({ ...newNews, mediaUrl })
+      toast.success('News post created!')
+      setShowNewsModal(false)
+      setNewNews({ postTitle: '', postContent: '', reference: '', mediaUrl: '' })
+      setSelectedFile(null)
+      setPreviewUrl(null)
+      loadData()
+    } catch (error) {
+      toast.error('Failed to create news post')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleDeleteClick = (news) => {
+    setNewsToDelete(news)
+    setShowDeleteModal(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await newsAPI.delete(newsToDelete.newsPostId)
+      toast.success('News post deleted successfully!')
+      setShowDeleteModal(false)
+      setNewsToDelete(null)
+      loadData()
+    } catch (error) {
+      toast.error('Failed to delete news post')
+    }
+  }
+
+  const handleEditClick = (news) => {
+    console.log('Editing news:', news) // Debug log
+    setNewsToEdit(news)
+
+    // Determine the media URL
+    let mediaUrl = ''
+    let previewUrl = null
+
+    if (news.mediaUrl) {
+      mediaUrl = news.mediaUrl
+      previewUrl = `${API_BASE_URL.replace('/api', '')}${news.mediaUrl}`
+    } else if (news.media && news.media.length > 0) {
+      mediaUrl = news.media[0].mediaUrl
+      previewUrl = `${API_BASE_URL.replace('/api', '')}${news.media[0].mediaUrl}`
+    }
+
+    setEditNews({
+      postTitle: news.postTitle || '',
+      postContent: news.postContent || '',
+      reference: news.reference || '',
+      mediaUrl: mediaUrl
+    })
+    setEditPreviewUrl(previewUrl)
+    setEditSelectedFile(null)
+    setShowEditModal(true)
+  }
+
+  const handleEditFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setEditSelectedFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => setEditPreviewUrl(reader.result)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleEditNews = async (e) => {
+    e.preventDefault()
+    setIsUploading(true)
+    try {
+      let mediaUrl = editNews.mediaUrl
+      if (editSelectedFile) {
+        const formData = new FormData()
+        formData.append('file', editSelectedFile)
+        const uploadResponse = await uploadAPI.uploadFile(formData)
+        mediaUrl = uploadResponse.data.url
+      }
+      await newsAPI.update(newsToEdit.newsPostId, { ...editNews, mediaUrl })
+      toast.success('News post updated!')
+      setShowEditModal(false)
+      setNewsToEdit(null)
+      setEditNews({ postTitle: '', postContent: '', reference: '', mediaUrl: '' })
+      setEditSelectedFile(null)
+      setEditPreviewUrl(null)
+      loadData()
+    } catch (error) {
+      toast.error('Failed to update news post')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const getInitials = (firstName, lastName) => {
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
+  }
+
+  // Pagination helpers
+  const getPaginatedData = (data, currentPage) => {
+    const indexOfLastItem = currentPage * itemsPerPage
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage
+    return data.slice(indexOfFirstItem, indexOfLastItem)
+  }
+
+  const getTotalPages = (dataLength) => {
+    return Math.ceil(dataLength / itemsPerPage)
+  }
+
+  const renderPagination = (totalItems, currentPage, setCurrentPage) => {
+    const totalPages = getTotalPages(totalItems)
+    if (totalPages <= 1) return null
+
+    const pages = []
+    const maxPagesToShow = 5
+    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2))
+    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1)
+
+    if (endPage - startPage < maxPagesToShow - 1) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1)
+    }
+
+    return (
+      <div className="d-flex justify-content-between align-items-center mt-3 px-3 pb-3">
+        <small className="text-muted">
+          Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
+        </small>
+        <Pagination className="mb-0">
+          <Pagination.First onClick={() => setCurrentPage(1)} disabled={currentPage === 1} />
+          <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
+
+          {startPage > 1 && <Pagination.Ellipsis disabled />}
+
+          {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(page => (
+            <Pagination.Item
+              key={page}
+              active={page === currentPage}
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </Pagination.Item>
+          ))}
+
+          {endPage < totalPages && <Pagination.Ellipsis disabled />}
+
+          <Pagination.Next onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} />
+          <Pagination.Last onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} />
+        </Pagination>
+      </div>
+    )
+  }
+
+  // Get paginated data
+  const paginatedUsers = getPaginatedData(filteredUsers, currentPageUsers)
+  const paginatedNews = getPaginatedData(filteredNews, currentPageNews)
+
+  return (
+    <div className="d-flex" style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+      {/* Sidebar */}
+      <div
+        className="bg-white border-end"
+        style={{
+          width: '250px',
+          position: 'fixed',
+          height: '100vh',
+          boxShadow: '2px 0 10px rgba(0,0,0,0.05)',
+          zIndex: 1000
+        }}
+      >
+        {/* Logo/Title */}
+        <div className="p-4 border-bottom">
+          <h4 className="mb-0 text-primary fw-bold">
+            <FaChartLine className="me-2" />
+            Admin Panel
+          </h4>
+        </div>
+
+        {/* Navigation */}
+        <div className="p-3">
+          <div className="d-grid gap-2">
+            <Button
+              variant={activeSection === 'users' ? 'primary' : 'light'}
+              className="text-start d-flex align-items-center"
+              onClick={() => {
+                setActiveSection('users')
+                setSearchQuery('')
+              }}
+              style={{
+                fontWeight: activeSection === 'users' ? '600' : '400',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <FaUsers className="me-2" />
+              Users Management
+            </Button>
+            <Button
+              variant={activeSection === 'news' ? 'primary' : 'light'}
+              className="text-start d-flex align-items-center"
+              onClick={() => {
+                setActiveSection('news')
+                setSearchQuery('')
+              }}
+              style={{
+                fontWeight: activeSection === 'news' ? '600' : '400',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <FaNewspaper className="me-2" />
+              News Posts
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div style={{ marginLeft: '250px', width: 'calc(100% - 250px)' }}>
+        <Container fluid className="p-4">
+          {/* Header */}
+          <Row className="mb-4">
+            <Col>
+              <h2 className="mb-1">{activeSection === 'users' ? 'Users Management' : 'News Posts Management'}</h2>
+              <p className="text-muted mb-0">
+                {activeSection === 'users'
+                  ? 'Manage and monitor all registered users'
+                  : 'Create, edit, and manage news articles'}
+              </p>
+            </Col>
+          </Row>
+
+          {/* Search and Actions */}
+          <Row className="mb-3">
+            <Col md={8}>
+              <InputGroup>
+                <InputGroup.Text className="bg-white">
+                  <FaSearch className="text-muted" />
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder={`Search ${activeSection === 'users' ? 'users by name or email' : 'news by title'}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </InputGroup>
+            </Col>
+            {activeSection === 'news' && (
+              <Col md={4} className="text-end">
+                <Button variant="primary" onClick={() => setShowNewsModal(true)}>
+                  <FaPlus className="me-2" />
+                  Create News Post
+                </Button>
+              </Col>
+            )}
+          </Row>
+
+          {/* Content Area */}
+          <Card className="border-0 shadow-sm">
+            <Card.Body className="p-0">
+              {isLoading ? (
+                <div className="text-center py-5">
+                  <Spinner animation="border" variant="primary" />
+                  <p className="text-muted mt-3">Loading data...</p>
+                </div>
+              ) : activeSection === 'users' ? (
+                <>
+                  {/* Users Table */}
+                  <Table hover responsive className="mb-0">
+                    <thead className="bg-light">
+                      <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Phone</th>
+                        <th className="text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedUsers.map((user) => (
+                        <tr key={user.userId}>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <div
+                                className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
+                                style={{ width: '40px', height: '40px', fontSize: '14px', fontWeight: '600' }}
+                              >
+                                {getInitials(user.firstName, user.lastName)}
+                              </div>
+                              <div>
+                                <div className="fw-semibold">{user.firstName} {user.lastName}</div>
+                                <small className="text-muted">ID: {user.userId}</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="align-middle">{user.email}</td>
+                          <td className="align-middle">
+                            <Badge bg={user.role === 'Admin' ? 'danger' : 'primary'}>
+                              {user.role}
+                            </Badge>
+                          </td>
+                          <td className="align-middle">{user.phoneNumber || 'N/A'}</td>
+                          <td className="align-middle text-center">
+                            <Button size="sm" variant="outline-primary" className="me-2">
+                              <FaEdit />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                  {renderPagination(filteredUsers.length, currentPageUsers, setCurrentPageUsers)}
+                </>
+              ) : (
+                /* News Table */
+                <Table hover responsive className="mb-0">
+                  <thead className="bg-light">
+                    <tr>
+                      <th>Title</th>
+                      <th>Date</th>
+                      <th>Reference</th>
+                      <th className="text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedNews.map((news) => (
+                      <tr key={news.newsPostId}>
+                        <td className="align-middle">
+                          <div className="d-flex align-items-center">
+                            {(news.mediaUrl || (news.media && news.media.length > 0)) && (
+                              <Image
+                                src={news.mediaUrl ? `${API_BASE_URL.replace('/api', '')}${news.mediaUrl}` : `${API_BASE_URL.replace('/api', '')}${news.media[0].mediaUrl}`}
+                                rounded
+                                style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                                className="me-3"
+                                onError={(e) => { e.target.style.display = 'none' }}
+                              />
+                            )}
+                            <div>
+                              <div className="fw-semibold">{news.postTitle}</div>
+                              <small className="text-muted">
+                                {news.postContent.substring(0, 60)}...
+                              </small>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="align-middle">
+                          {new Date(news.publicationDate).toLocaleDateString()}
+                        </td>
+                        <td className="align-middle">
+                          {news.reference ? (
+                            <a href={news.reference} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
+                              View Source
+                            </a>
+                          ) : (
+                            <span className="text-muted">N/A</span>
+                          )}
+                        </td>
+                        <td className="align-middle text-center">
+                          <Button
+                            size="sm"
+                            variant="outline-primary"
+                            className="me-2"
+                            onClick={() => handleEditClick(news)}
+                          >
+                            <FaEdit />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline-danger"
+                            onClick={() => handleDeleteClick(news)}
+                          >
+                            <FaTrash />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
+            </Card.Body>
+          </Card>
+
+          {/* Footer */}
+          <div className="text-center mt-4 py-3 border-top">
+            <small className="text-muted">© 2024 Thalassemia Care Hub. All rights reserved.</small>
+          </div>
+        </Container>
+      </div>
+
+      {/* Create News Modal */}
+      <Modal show={showNewsModal} onHide={() => setShowNewsModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Create News Post</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleCreateNews}>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Title *</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter news title"
+                value={newNews.postTitle}
+                onChange={(e) => setNewNews({ ...newNews, postTitle: e.target.value })}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Content *</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={6}
+                placeholder="Write your news content here..."
+                value={newNews.postContent}
+                onChange={(e) => setNewNews({ ...newNews, postContent: e.target.value })}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Reference/Source (optional)</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter source URL or citation"
+                value={newNews.reference}
+                onChange={(e) => setNewNews({ ...newNews, reference: e.target.value })}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Upload Media</Form.Label>
+              <div className="d-flex gap-2 mb-2">
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => document.getElementById('newsMediaInput').click()}
+                >
+                  <FaImage className="me-2" />
+                  Choose Image/Video
+                </Button>
+                {selectedFile && (
+                  <span className="text-muted align-self-center">{selectedFile.name}</span>
+                )}
+              </div>
+              <input
+                id="newsMediaInput"
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+              {previewUrl && (
+                <div className="mt-2">
+                  <Image src={previewUrl} thumbnail style={{ maxHeight: '200px' }} />
+                </div>
+              )}
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowNewsModal(false)
+                setSelectedFile(null)
+                setPreviewUrl(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" disabled={isUploading}>
+              {isUploading ? 'Creating...' : 'Create News Post'}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
+      {/* Edit News Modal */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Edit News Post</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleEditNews}>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Title *</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter news title"
+                value={editNews.postTitle}
+                onChange={(e) => setEditNews({ ...editNews, postTitle: e.target.value })}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Content *</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={6}
+                placeholder="Write your news content here..."
+                value={editNews.postContent}
+                onChange={(e) => setEditNews({ ...editNews, postContent: e.target.value })}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Reference/Source (optional)</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter source URL or citation"
+                value={editNews.reference}
+                onChange={(e) => setEditNews({ ...editNews, reference: e.target.value })}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Upload Media</Form.Label>
+              <div className="d-flex gap-2 mb-2">
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => document.getElementById('editNewsMediaInput').click()}
+                >
+                  <FaImage className="me-2" />
+                  Choose Image/Video
+                </Button>
+                {editSelectedFile && (
+                  <span className="text-muted align-self-center">{editSelectedFile.name}</span>
+                )}
+              </div>
+              <input
+                id="editNewsMediaInput"
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleEditFileChange}
+                style={{ display: 'none' }}
+              />
+              {editPreviewUrl && (
+                <div className="mt-2">
+                  <Image src={editPreviewUrl} thumbnail style={{ maxHeight: '200px' }} />
+                </div>
+              )}
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowEditModal(false)
+                setEditSelectedFile(null)
+                setEditPreviewUrl(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" disabled={isUploading}>
+              {isUploading ? 'Updating...' : 'Update News Post'}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete the news post "{newsToDelete?.postTitle}"? This action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDeleteConfirm}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
+  )
+}
+
+export default AdminDashboard
