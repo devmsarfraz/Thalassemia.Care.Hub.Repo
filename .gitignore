@@ -12,6 +12,9 @@ out/
 venv/
 .venv/
 
+# Static files
+Backend/thalassemiaCareHubv2/wwwroot/
+
 # ASP.NET Core / .NET
 *.dll
 *.exe
@@ -21,9 +24,7 @@ venv/
 *.sqlite
 *.cache
 
-# EF Core Migrations (optional if you want to ignore migrations)
-# Migrations/
-# *.Designer.cs
+Backend/thalassemiaCareHubv2/Migrations/
 
 # User-specific files
 *.rsuser
