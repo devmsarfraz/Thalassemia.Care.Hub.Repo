@@ -1,0 +1,282 @@
+{
+    "info": {
+        "name": "Thalassemia Care Hub - ChatterBot API",
+        "description": "API endpoints for testing the Python ChatterBot service",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Health Check",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:5000/api/health",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "health"
+                    ]
+                },
+                "description": "Check if the chatbot service is running and healthy"
+            },
+            "response": []
+        },
+        {
+            "name": "Get Training Status",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:5000/api/status",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "status"
+                    ]
+                },
+                "description": "Get chatbot training statistics"
+            },
+            "response": []
+        },
+        {
+            "name": "Chat - What is thalassemia?",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"message\": \"What is thalassemia?\",\n  \"session_id\": \"test-session-1\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/chat",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "chat"
+                    ]
+                },
+                "description": "Ask about thalassemia definition"
+            },
+            "response": []
+        },
+        {
+            "name": "Chat - Is it contagious?",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"message\": \"Is thalassemia contagious?\",\n  \"session_id\": \"test-session-1\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/chat",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "chat"
+                    ]
+                },
+                "description": "Ask if thalassemia is contagious"
+            },
+            "response": []
+        },
+        {
+            "name": "Chat - Can I exercise?",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"message\": \"Can I exercise with thalassemia?\",\n  \"session_id\": \"test-session-1\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/chat",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "chat"
+                    ]
+                },
+                "description": "Ask about exercise with thalassemia"
+            },
+            "response": []
+        },
+        {
+            "name": "Chat - Treatment options",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"message\": \"What are the treatment options for thalassemia?\",\n  \"session_id\": \"test-session-1\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/chat",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "chat"
+                    ]
+                },
+                "description": "Ask about treatment options"
+            },
+            "response": []
+        },
+        {
+            "name": "Chat - Diet recommendations",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"message\": \"What foods should I avoid with thalassemia?\",\n  \"session_id\": \"test-session-1\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/chat",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "chat"
+                    ]
+                },
+                "description": "Ask about diet recommendations"
+            },
+            "response": []
+        },
+        {
+            "name": "Chat - Custom Question",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"message\": \"Your question here\",\n  \"session_id\": \"test-session-1\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/chat",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "chat"
+                    ]
+                },
+                "description": "Test with your own custom question"
+            },
+            "response": []
+        },
+        {
+            "name": "Train - Add New Conversations",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"conversations\": [\n    {\n      \"question\": \"What is hemoglobin?\",\n      \"answer\": \"Hemoglobin is a protein in red blood cells that carries oxygen throughout your body. In thalassemia, the body doesn't produce enough hemoglobin.\"\n    },\n    {\n      \"question\": \"How often do I need blood transfusions?\",\n      \"answer\": \"For thalassemia major, blood transfusions are typically needed every 2-4 weeks to maintain healthy hemoglobin levels above 9.5 g/dL. Your doctor will determine the exact schedule based on your individual needs.\"\n    }\n  ]\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/train",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "train"
+                    ]
+                },
+                "description": "Add new training conversations to the chatbot"
+            },
+            "response": []
+        },
+        {
+            "name": "Reset Chatbot",
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:5000/api/reset",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "reset"
+                    ]
+                },
+                "description": "Reset and retrain the chatbot (WARNING: Clears all training data)"
+            },
+            "response": []
+        }
+    ]
+}

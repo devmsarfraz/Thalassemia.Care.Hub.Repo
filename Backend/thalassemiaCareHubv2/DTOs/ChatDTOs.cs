@@ -34,6 +34,12 @@ namespace thalassemiaCareHubv2.DTOs
         /// </summary>
         /// <example>What are the common symptoms of thalassemia?</example>
         public string MessageContent { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Optional: Specify which AI provider to use (Gemini, ChatterBot, or Auto for fallback)
+        /// </summary>
+        /// <example>ChatterBot</example>
+        public string? AIProvider { get; set; }
     }
 
     /// <summary>

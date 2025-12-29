@@ -12,13 +12,22 @@ namespace thalassemiaCareHubv2.Services
     {
         private readonly IChatRepository _chatRepository;
         private readonly IGeminiService _geminiService;
+        private readonly IChatterBotService _chatterBotService;
         private readonly IUserRepository _userRepository;
+        private readonly ILogger<ChatService> _logger;
 
-        public ChatService(IChatRepository chatRepository, IGeminiService geminiService, IUserRepository userRepository)
+        public ChatService(
+            IChatRepository chatRepository, 
+            IGeminiService geminiService, 
+            IChatterBotService chatterBotService,
+            IUserRepository userRepository,
+            ILogger<ChatService> logger)
         {
             _chatRepository = chatRepository;
             _geminiService = geminiService;
+            _chatterBotService = chatterBotService;
             _userRepository = userRepository;
+            _logger = logger;
         }
 
         /// <summary>
@@ -182,19 +191,60 @@ namespace thalassemiaCareHubv2.Services
                     .Select(m => (m.SenderType == "User" ? "user" : "assistant", m.MessageContent))
                     .ToList();
 
-                // Get AI response
+                // Determine which AI provider to use
+                // Default to ChatterBot if not specified
+                string aiProvider = request.AIProvider ?? "ChatterBot";
                 string aiResponseContent;
+                string actualProvider;
+
                 try
                 {
-                    aiResponseContent = await _geminiService.GetChatResponseAsync(
-                        request.MessageContent, 
-                        conversationHistory, 
-                        userRole);
+                    if (aiProvider.Equals("ChatterBot", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Use ChatterBot (DEFAULT)
+                        _logger.LogInformation("Using ChatterBot for response");
+                        aiResponseContent = await _chatterBotService.GetChatResponseAsync(
+                            request.MessageContent, 
+                            conversationHistory);
+                        actualProvider = "ChatterBot";
+                    }
+                    else if (aiProvider.Equals("Gemini", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Use Gemini
+                        _logger.LogInformation("Using Gemini for response");
+                        aiResponseContent = await _geminiService.GetChatResponseAsync(
+                            request.MessageContent, 
+                            conversationHistory, 
+                            userRole);
+                        actualProvider = "Gemini";
+                    }
+                    else // Auto mode
+                    {
+                        // Auto mode: Try ChatterBot first, fallback to Gemini
+                        _logger.LogInformation("Auto mode: Trying ChatterBot first");
+                        try
+                        {
+                            aiResponseContent = await _chatterBotService.GetChatResponseAsync(
+                                request.MessageContent, 
+                                conversationHistory);
+                            actualProvider = "ChatterBot";
+                        }
+                        catch (Exception chatterBotEx)
+                        {
+                            _logger.LogWarning(chatterBotEx, "ChatterBot failed, falling back to Gemini");
+                            aiResponseContent = await _geminiService.GetChatResponseAsync(
+                                request.MessageContent, 
+                                conversationHistory, 
+                                userRole);
+                            actualProvider = "Gemini";
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error getting AI response: {ex.Message}");
+                    _logger.LogError(ex, "Error getting AI response from all providers");
                     aiResponseContent = "I apologize, but I'm experiencing technical difficulties right now. Please try again later or consult with a healthcare professional for immediate assistance.";
+                    actualProvider = "Error";
                 }
 
                 // Add AI response to database
@@ -203,7 +253,8 @@ namespace thalassemiaCareHubv2.Services
                     ChatSessionId = sessionId,
                     SenderType = "AI",
                     MessageContent = aiResponseContent,
-                    Timestamp = DateTime.UtcNow
+                    Timestamp = DateTime.UtcNow,
+                    AIProvider = actualProvider
                 };
 
                 var savedAIMessage = await _chatRepository.AddMessageAsync(aiMessage);

@@ -28,7 +28,11 @@ builder.Services.AddScoped<INewsRepository, NewsRepository>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IGeminiService, GeminiService>();
+builder.Services.AddScoped<IChatterBotService, ChatterBotService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Configure HTTP client for ChatterBot Service
+builder.Services.AddHttpClient<IChatterBotService, ChatterBotService>();
 
 // Configure HTTP client for Email Service (Brevo)
 builder.Services.AddHttpClient<IEmailService, EmailService>();
