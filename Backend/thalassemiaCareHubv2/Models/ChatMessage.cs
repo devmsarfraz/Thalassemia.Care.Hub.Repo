@@ -15,5 +15,7 @@ public partial class ChatMessage
 
     public DateTime Timestamp { get; set; }
 
+    public string? AIProvider { get; set; }
+
     public virtual ChatSession ChatSession { get; set; } = null!;
 }
