@@ -28,7 +28,7 @@ const Footer = () => {
         </Row>
         <Row className="mt-3">
           <Col className="text-center text-muted">
-            <p>&copy; 2024 Thalassemia Care Hub. All rights reserved.</p>
+            <p>&copy; 2025 Thalassemia Care Hub. All rights reserved.</p>
           </Col>
         </Row>
       </Container>
