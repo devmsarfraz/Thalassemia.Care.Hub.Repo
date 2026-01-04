@@ -25,7 +25,6 @@ namespace thalassemiaCareHubv2.Services
         }
 
         /// <summary>
-        /// Get AI chat response from Google Gemini
         /// </summary>
         public async Task<string> GetChatResponseAsync(
             string userMessage, 
