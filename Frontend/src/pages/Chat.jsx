@@ -144,7 +144,7 @@ const Chat = () => {
             const response = await chatAPI.sendMessage(sessionId, { messageContent: userMsg.content })
             setIsTyping(false)
 
-            if (response.data && response.data.success) {
+            if (response.data && response.data.aiMessage) {
                 const aiMsg = response.data.aiMessage
                 const uiAiMsg = {
                     id: aiMsg.messageId,
@@ -164,7 +164,7 @@ const Chat = () => {
                 setMessages(prev => prev.map(m => m.id === tempId ? uiRealUserMsg : m).concat(uiAiMsg))
                 fetchSessions()
             } else {
-                console.error("Failed to send message")
+                console.error("Failed to send message", response.data)
             }
 
         } catch (error) {
