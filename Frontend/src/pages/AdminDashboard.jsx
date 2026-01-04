@@ -692,7 +692,16 @@ const AdminDashboard = () => {
       </div>
 
       {/* Create News Modal */}
-      <Modal show={showNewsModal} onHide={() => setShowNewsModal(false)} size="lg">
+      <Modal
+        show={showNewsModal}
+        onHide={() => {
+          setShowNewsModal(false)
+          setNewNews({ postTitle: '', postContent: '', reference: '', mediaUrl: '', mediaList: [], category: 'General' })
+          setSelectedFiles([])
+          setPreviewUrls([])
+        }}
+        size="lg"
+      >
         <Modal.Header closeButton>
           <Modal.Title>Create News Post</Modal.Title>
         </Modal.Header>
@@ -776,8 +785,9 @@ const AdminDashboard = () => {
               variant="secondary"
               onClick={() => {
                 setShowNewsModal(false)
-                setSelectedFile(null)
-                setPreviewUrl(null)
+                setNewNews({ postTitle: '', postContent: '', reference: '', mediaUrl: '', mediaList: [], category: 'General' })
+                setSelectedFiles([])
+                setPreviewUrls([])
               }}
             >
               Cancel
@@ -790,7 +800,17 @@ const AdminDashboard = () => {
       </Modal>
 
       {/* Edit News Modal */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg">
+      <Modal
+        show={showEditModal}
+        onHide={() => {
+          setShowEditModal(false)
+          setNewsToEdit(null)
+          setEditNews({ postTitle: '', postContent: '', reference: '', mediaUrl: '', category: 'General' })
+          setEditSelectedFiles([])
+          setEditPreviewUrls([])
+        }}
+        size="lg"
+      >
         <Modal.Header closeButton>
           <Modal.Title>Edit News Post</Modal.Title>
         </Modal.Header>
@@ -909,6 +929,8 @@ const AdminDashboard = () => {
               variant="secondary"
               onClick={() => {
                 setShowEditModal(false)
+                setNewsToEdit(null)
+                setEditNews({ postTitle: '', postContent: '', reference: '', mediaUrl: '', category: 'General' })
                 setEditSelectedFiles([])
                 setEditPreviewUrls([])
               }}
