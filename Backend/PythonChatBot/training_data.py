@@ -3,6 +3,9 @@ Thalassemia-specific training data for ChatterBot
 This module contains conversation pairs for training the chatbot
 """
 
+# Import general conversational data
+from conversational_data import CONVERSATIONAL_GENERAL
+
 # Basic Thalassemia Knowledge
 BASIC_KNOWLEDGE = [
     {
@@ -128,7 +131,8 @@ ALL_TRAINING_DATA = (
     LIFESTYLE_LIVING +
     EMERGENCY_PROTOCOLS +
     EMOTIONAL_SUPPORT +
-    CONVERSATIONAL
+    CONVERSATIONAL +
+    CONVERSATIONAL_GENERAL  # 3,725 general conversation pairs
 )
 
 # Function to get training data in ChatterBot format
@@ -159,5 +163,6 @@ def get_category_data(category_name):
         "emergency": EMERGENCY_PROTOCOLS,
         "emotional": EMOTIONAL_SUPPORT,
         "conversational": CONVERSATIONAL,
+        "conversational_general": CONVERSATIONAL_GENERAL,
     }
     return category_map.get(category_name.lower(), [])

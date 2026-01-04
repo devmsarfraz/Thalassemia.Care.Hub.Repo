@@ -84,16 +84,19 @@ class ModernChatBotService:
             logger.error(f"❌ Error during training: {str(e)}")
             return False
     
-    def get_response(self, user_message, session_id=None):
+    def get_response(self, user_message, session_id=None, conversation_id=None):
         """
-        Get chatbot response for a user message using semantic similarity
+        Get chatbot response using hybrid approach:
+        1. Check training data first (fast)
+        2. If confidence is low, use LLM (smart)
         
         Args:
             user_message: The user's input message
             session_id: Optional session identifier
+            conversation_id: Optional conversation ID for context
             
         Returns:
-            dict: Response containing bot message and confidence
+            dict: Response containing bot message, confidence, and metadata
         """
         try:
             if not self.questions or self.question_embeddings is None:
@@ -101,7 +104,9 @@ class ModernChatBotService:
                 return {
                     'response': self.default_response,
                     'confidence': 0.0,
-                    'session_id': session_id
+                    'session_id': session_id,
+                    'conversation_id': conversation_id,
+                    'used_llm': False
                 }
             
             logger.info(f"Processing message: '{user_message[:50]}...'")
@@ -118,19 +123,60 @@ class ModernChatBotService:
             
             logger.info(f"Best match similarity: {best_similarity:.3f}")
             
-            # Return response if similarity is above threshold
-            if best_similarity >= self.similarity_threshold:
+            # HYBRID APPROACH: Use training data if confidence is high enough
+            if best_similarity >= 0.7:  # High confidence threshold for training data
                 response = self.answers[best_match_idx]
                 confidence = float(best_similarity)
+                used_llm = False
+                logger.info(f"✅ Using training data (confidence: {confidence:.2%})")
+            
+            # Otherwise, try LLM fallback
             else:
-                response = self.default_response
-                confidence = 0.0
+                logger.info(f"⚠️  Low confidence ({best_similarity:.2%}), trying LLM fallback...")
+                
+                # Import here to avoid circular dependency
+                from llm_service import get_llm_service
+                from conversation_manager import get_conversation_manager
+                
+                llm_service = get_llm_service()
+                
+                logger.info(f"Checking for conversation ID: {conversation_id}")
+                
+                if conversation_id:
+                    # Get conversation history
+                    conv_manager = get_conversation_manager()
+                    history = conv_manager.get_conversation_history(conversation_id, limit=10)
+                    
+                    # Get LLM response with context (using robust re-check)
+                    llm_response, success = llm_service.check_and_get_response(
+                        user_message,
+                        conversation_history=history,
+                        training_context=self.answers[best_match_idx] if best_similarity >= self.similarity_threshold else None
+                    )
+                    
+                    if success:
+                        response = llm_response
+                        confidence = 0.85  # LLM responses get high confidence
+                        used_llm = True
+                        logger.info(f"🤖 Using LLM response")
+                    else:
+                        response = self.default_response
+                        confidence = 0.0
+                        used_llm = False
+                else:
+                    # LLM not available, use default response
+                    response = self.default_response
+                    confidence = 0.0
+                    used_llm = False
+                    logger.warning("LLM not available, using default response")
             
             return {
                 'response': response,
                 'confidence': confidence,
                 'session_id': session_id,
-                'matched_question': self.questions[best_match_idx] if best_similarity >= self.similarity_threshold else None
+                'conversation_id': conversation_id,
+                'matched_question': self.questions[best_match_idx] if best_similarity >= self.similarity_threshold else None,
+                'used_llm': used_llm
             }
             
         except Exception as e:
@@ -138,7 +184,8 @@ class ModernChatBotService:
             return {
                 'response': self.default_response,
                 'confidence': 0.0,
-                'error': str(e)
+                'error': str(e),
+                'used_llm': False
             }
     
     def _save_training_data(self):
