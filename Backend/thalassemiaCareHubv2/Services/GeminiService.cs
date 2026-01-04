@@ -19,7 +19,7 @@ namespace thalassemiaCareHubv2.Services
             _httpClient = httpClient;
             _logger = logger;
             _apiKey = configuration["Gemini:ApiKey"] ?? throw new ArgumentNullException("Gemini:ApiKey is not configured");
-            _baseUrl = configuration["Gemini:BaseUrl"] ?? throw new ArgumentNullException("Gemini:BaseUrl is not configured");
+            _baseUrl = configuration["Gemini:ApiUrl"] ?? throw new ArgumentNullException("Gemini:ApiUrl is not configured");
             
             _logger.LogInformation("GeminiService initialized with API endpoint: {BaseUrl}", _baseUrl);
         }

@@ -387,5 +387,86 @@ namespace thalassemiaCareHubv2.Services
                 return false;
             }
         }
+
+        /// <summary>
+        /// Save a user message to a chat session
+        /// </summary>
+        public async Task<ChatMessageResponse?> SaveUserMessageAsync(int sessionId, string messageContent, int userId)
+        {
+            try
+            {
+                // Verify user owns the session
+                var ownsSession = await _chatRepository.VerifySessionOwnershipAsync(sessionId, userId);
+                if (!ownsSession)
+                    return null;
+
+                var userMessage = new ChatMessage
+                {
+                    ChatSessionId = sessionId,
+                    SenderType = "User",
+                    MessageContent = messageContent,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var savedMessage = await _chatRepository.AddMessageAsync(userMessage);
+                if (savedMessage == null)
+                    return null;
+
+                return new ChatMessageResponse
+                {
+                    MessageId = savedMessage.MessageId,
+                    ChatSessionId = savedMessage.ChatSessionId,
+                    SenderType = savedMessage.SenderType,
+                    MessageContent = savedMessage.MessageContent,
+                    Timestamp = savedMessage.Timestamp
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ChatService.SaveUserMessageAsync: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Save an assistant message to a chat session
+        /// </summary>
+        public async Task<ChatMessageResponse?> SaveAssistantMessageAsync(int sessionId, string messageContent, int userId)
+        {
+            try
+            {
+                // Verify user owns the session
+                var ownsSession = await _chatRepository.VerifySessionOwnershipAsync(sessionId, userId);
+                if (!ownsSession)
+                    return null;
+
+                var assistantMessage = new ChatMessage
+                {
+                    ChatSessionId = sessionId,
+                    SenderType = "AI",
+                    MessageContent = messageContent,
+                    Timestamp = DateTime.UtcNow,
+                    AIProvider = "Gemini"
+                };
+
+                var savedMessage = await _chatRepository.AddMessageAsync(assistantMessage);
+                if (savedMessage == null)
+                    return null;
+
+                return new ChatMessageResponse
+                {
+                    MessageId = savedMessage.MessageId,
+                    ChatSessionId = savedMessage.ChatSessionId,
+                    SenderType = savedMessage.SenderType,
+                    MessageContent = savedMessage.MessageContent,
+                    Timestamp = savedMessage.Timestamp
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ChatService.SaveAssistantMessageAsync: {ex.Message}");
+                return null;
+            }
+        }
     }
 }
