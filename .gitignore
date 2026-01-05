@@ -54,8 +54,6 @@ Thumbs.db
 *.log
 
 # Secret / env files
-appsettings.*.json
-secrets.json
 .env
 
 
