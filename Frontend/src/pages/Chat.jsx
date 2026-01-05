@@ -365,7 +365,7 @@ const Chat = () => {
                         <div className="empty-state">
                             <div className="empty-icon">🤖</div>
                             <h2>How can I help you today?</h2>
-                            <p>I'm powered by Google Gemini AI to assist you with Thalassemia-related medical information.</p>
+                            <p>I'm powered to assist you with Thalassemia-related medical information.</p>
                             <div className="suggestion-cards">
                                 <div className="suggestion-card" onClick={() => setInputMessage('What are the symptoms of Thalassemia?')}>
                                     <span className="suggestion-icon">📚</span>
