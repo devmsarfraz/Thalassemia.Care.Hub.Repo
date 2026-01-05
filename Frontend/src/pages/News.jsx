@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Container, Row, Col, Form, InputGroup, Spinner } from 'react-bootstrap'
+import { Container, Row, Col, Form, InputGroup, Spinner, Pagination } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import { newsAPI } from '../services/api'
 import { toast } from 'react-toastify'
@@ -15,12 +15,17 @@ const News = () => {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [isLoading, setIsLoading] = useState(true)
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [articlesPerPage] = useState(6) // 6 articles per page
+
   useEffect(() => {
     loadNews()
   }, [])
 
   useEffect(() => {
     filterAndSortPosts()
+    setCurrentPage(1) // Reset to page 1 when filters change
   }, [newsPosts, searchQuery, sortBy, selectedCategory])
 
   const loadNews = async () => {
@@ -97,7 +102,17 @@ const News = () => {
 
   // Get featured article (most recent)
   const featuredArticle = filteredPosts.length > 0 ? filteredPosts[0] : null
-  const remainingArticles = filteredPosts.slice(1)
+
+  // Pagination calculations
+  const indexOfLastArticle = currentPage * articlesPerPage
+  const indexOfFirstArticle = indexOfLastArticle - articlesPerPage
+  const currentArticles = filteredPosts.slice(1).slice(indexOfFirstArticle, indexOfLastArticle) // Skip featured article
+  const totalPages = Math.ceil((filteredPosts.length - 1) / articlesPerPage) // -1 for featured article
+
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   return (
     <div style={{ background: 'var(--news-bg-secondary)', minHeight: '100vh', paddingBottom: '4rem' }}>
@@ -233,9 +248,13 @@ const News = () => {
                 fontSize: '0.9375rem'
               }}>
                 {filteredPosts.length === 0 && searchQuery ? (
-                  <>No results found for "<strong>{searchQuery}</strong>"</>
+                  <>{filteredPosts.length === 1 ? (
+                    <>No additional articles</>
+                  ) : (
+                    <>Showing <strong>{indexOfFirstArticle + 1}</strong> to <strong>{Math.min(indexOfLastArticle, filteredPosts.length - 1)}</strong> of <strong>{filteredPosts.length - 1}</strong> {filteredPosts.length - 1 === 1 ? 'article' : 'articles'}</>
+                  )}</>
                 ) : (
-                  <>Showing <strong>{remainingArticles.length}</strong> {remainingArticles.length === 1 ? 'article' : 'articles'}</>
+                  <>Showing <strong>{currentArticles.length}</strong> {currentArticles.length === 1 ? 'article' : 'articles'}</>
                 )}
               </p>
             </Col>
@@ -258,86 +277,117 @@ const News = () => {
           </Row>
         ) : (
           /* News Cards Grid */
-          <div className="news-grid">
-            {remainingArticles.length === 0 ? (
-              <Col>
-                <div style={{
-                  textAlign: 'center',
-                  padding: '4rem 2rem',
-                  background: 'white',
-                  borderRadius: 'var(--news-radius-lg)',
-                  boxShadow: 'var(--news-shadow-md)'
-                }}>
-                  <FaNewspaper size={48} style={{ color: 'var(--news-text-muted)', marginBottom: '1rem' }} />
-                  <h5 style={{
-                    fontFamily: 'var(--news-heading-font)',
-                    color: 'var(--news-text-light)'
+          <>
+            <div className="news-grid">
+              {currentArticles.length === 0 ? (
+                <Col>
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '4rem 2rem',
+                    background: 'white',
+                    borderRadius: 'var(--news-radius-lg)',
+                    boxShadow: 'var(--news-shadow-md)'
                   }}>
-                    No news articles available yet
-                  </h5>
-                  <p style={{
-                    fontFamily: 'var(--news-ui-font)',
-                    color: 'var(--news-text-muted)'
-                  }}>
-                    Check back later for updates
-                  </p>
-                </div>
-              </Col>
-            ) : (
-              remainingArticles.map((news) => (
-                <div key={news.newsPostId} className="news-card">
-                  {/* Card Image */}
-                  {getImageUrl(news) && (
-                    <div className="news-card-image-wrapper">
-                      <img
-                        src={getImageUrl(news)}
-                        alt={news.postTitle}
-                        className="news-card-image"
-                      />
-                      <span className={`news-card-category ${news.category?.toLowerCase()}`}>
-                        {news.category || 'General'}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Card Body */}
-                  <div className="news-card-body">
-                    <h3 className="news-card-title">{news.postTitle}</h3>
-
-                    <div className="news-card-meta">
-                      <span className="news-card-meta-item">
-                        <FaClock size={12} />
-                        {formatDate(news.publicationDate)}
-                      </span>
-                      <span className="news-card-meta-item">
-                        {calculateReadingTime(news.postContent)}
-                      </span>
-                    </div>
-
-                    <p className="news-card-excerpt">
-                      {news.postContent.replace(/<[^>]*>/g, '')}
+                    <FaNewspaper size={48} style={{ color: 'var(--news-text-muted)', marginBottom: '1rem' }} />
+                    <h5 style={{
+                      fontFamily: 'var(--news-heading-font)',
+                      color: 'var(--news-text-light)'
+                    }}>
+                      No news articles available yet
+                    </h5>
+                    <p style={{
+                      fontFamily: 'var(--news-ui-font)',
+                      color: 'var(--news-text-muted)'
+                    }}>
+                      Check back later for updates
                     </p>
+                  </div>
+                </Col>
+              ) : (
+                currentArticles.map((news) => (
+                  <div key={news.newsPostId} className="news-card">
+                    {/* Card Image */}
+                    {getImageUrl(news) && (
+                      <div className="news-card-image-wrapper">
+                        <img
+                          src={getImageUrl(news)}
+                          alt={news.postTitle}
+                          className="news-card-image"
+                        />
+                        <span className={`news-card-category ${news.category?.toLowerCase()}`}>
+                          {news.category || 'General'}
+                        </span>
+                      </div>
+                    )}
 
-                    <div className="news-card-footer">
-                      {news.userName && (
-                        <div className="news-card-author">
-                          <FaUser size={16} style={{ color: 'var(--news-text-light)' }} />
-                          <span className="news-card-author-name">{news.userName}</span>
-                        </div>
-                      )}
-                      <Link
-                        to={`/news/${news.newsPostId}`}
-                        className="news-card-cta"
-                      >
-                        Read More
-                        <FaArrowRight size={12} />
-                      </Link>
+                    {/* Card Body */}
+                    <div className="news-card-body">
+                      <h3 className="news-card-title">{news.postTitle}</h3>
+
+                      <div className="news-card-meta">
+                        <span className="news-card-meta-item">
+                          <FaClock size={12} />
+                          {formatDate(news.publicationDate)}
+                        </span>
+                        <span className="news-card-meta-item">
+                          {calculateReadingTime(news.postContent)}
+                        </span>
+                      </div>
+
+                      <p className="news-card-excerpt">
+                        {news.postContent.replace(/<[^>]*>/g, '')}
+                      </p>
+
+                      <div className="news-card-footer">
+                        {news.userName && (
+                          <div className="news-card-author">
+                            <FaUser size={16} style={{ color: 'var(--news-text-light)' }} />
+                            <span className="news-card-author-name">{news.userName}</span>
+                          </div>
+                        )}
+                        <Link
+                          to={`/news/${news.newsPostId}`}
+                          className="news-card-cta"
+                        >
+                          Read More
+                          <FaArrowRight size={12} />
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))
+              )}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Row className="mt-5">
+                <Col>
+                  <div className="d-flex justify-content-center">
+                    <Pagination>
+                      <Pagination.Prev
+                        onClick={() => paginate(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      />
+                      {[...Array(totalPages)].map((_, idx) => (
+                        <Pagination.Item
+                          key={idx + 1}
+                          active={idx + 1 === currentPage}
+                          onClick={() => paginate(idx + 1)}
+                        >
+                          {idx + 1}
+                        </Pagination.Item>
+                      ))}
+                      <Pagination.Next
+                        onClick={() => paginate(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      />
+                    </Pagination>
+                  </div>
+                </Col>
+              </Row>
             )}
-          </div>
+          </>
         )}
       </Container>
     </div>

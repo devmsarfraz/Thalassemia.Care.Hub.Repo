@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Container, Button, Form, Spinner } from 'react-bootstrap'
+import { Container, Button, Form, Spinner, Image } from 'react-bootstrap'
 import {
     FaPlus,
     FaPaperPlane,
@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fa'
 import { chatAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
+import { API_BASE_URL } from '../config/api'
 import './Chat.css'
 
 const Chat = () => {
@@ -22,6 +23,12 @@ const Chat = () => {
     const [messages, setMessages] = useState([])
     const [inputMessage, setInputMessage] = useState('')
     const [isTyping, setIsTyping] = useState(false)
+
+    // Debug: Log user data to check profile picture
+    useEffect(() => {
+        console.log('Current user data:', user)
+        console.log('Profile picture:', user?.profilePicture)
+    }, [user])
     const [sidebarOpen, setSidebarOpen] = useState(true)
     const [conversations, setConversations] = useState([])
     const [currentSessionId, setCurrentSessionId] = useState(null)
@@ -137,7 +144,7 @@ const Chat = () => {
             const response = await chatAPI.sendMessage(sessionId, { messageContent: userMsg.content })
             setIsTyping(false)
 
-            if (response.data && response.data.success) {
+            if (response.data && response.data.aiMessage) {
                 const aiMsg = response.data.aiMessage
                 const uiAiMsg = {
                     id: aiMsg.messageId,
@@ -157,7 +164,7 @@ const Chat = () => {
                 setMessages(prev => prev.map(m => m.id === tempId ? uiRealUserMsg : m).concat(uiAiMsg))
                 fetchSessions()
             } else {
-                console.error("Failed to send message")
+                console.error("Failed to send message", response.data)
             }
 
         } catch (error) {
@@ -344,11 +351,7 @@ const Chat = () => {
                         <FaBars />
                     </button>
                     <h5 className="chat-title">
-                        <FaStar style={{ color: '#6366f1' }} />
                         AI Health Assistant
-                        <span className="badge bg-success ms-2" style={{ fontSize: '0.65em', verticalAlign: 'middle', padding: '0.35em 0.65em' }}>
-                            POWERED BY GEMINI
-                        </span>
                     </h5>
                 </div>
 
@@ -383,7 +386,26 @@ const Chat = () => {
                             {messages.map(message => (
                                 <div key={message.id} className={`message ${message.role}`}>
                                     <div className="message-avatar">
-                                        {message.role === 'user' ? <FaUser /> : <FaRobot />}
+                                        {message.role === 'user' ? (
+                                            user?.profilePicture ? (
+                                                <Image
+                                                    src={`${API_BASE_URL.replace('/api', '')}${user.profilePicture}`}
+                                                    roundedCircle
+                                                    className="user-avatar-img"
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none'
+                                                        e.target.nextSibling.style.display = 'flex'
+                                                    }}
+                                                />
+                                            ) : (
+                                                <FaUser />
+                                            )
+                                        ) : (
+                                            <FaRobot />
+                                        )}
+                                        {message.role === 'user' && user?.profilePicture && (
+                                            <FaUser style={{ display: 'none' }} />
+                                        )}
                                     </div>
                                     <div className="message-content">
                                         <div className="message-text">

@@ -37,6 +37,9 @@ builder.Services.AddHttpClient<IChatterBotService, ChatterBotService>();
 // Configure HTTP client for Email Service (Brevo)
 builder.Services.AddHttpClient<IEmailService, EmailService>();
 
+// Add HttpClient factory for general use (e.g., Gemini API in ChatController)
+builder.Services.AddHttpClient();
+
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"] ?? throw new ArgumentNullException("JwtSettings:SecretKey");

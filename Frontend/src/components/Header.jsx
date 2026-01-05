@@ -1,11 +1,12 @@
 import { Navbar, Nav, Container, NavDropdown, Button } from 'react-bootstrap'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { FaUser, FaSignOutAlt, FaRobot } from 'react-icons/fa'
 
 const Header = () => {
     const { user, logout } = useAuth()
     const navigate = useNavigate()
+    const location = useLocation()
 
     const handleLogout = () => {
         logout()
@@ -49,32 +50,32 @@ const Header = () => {
                                 <Nav.Link
                                     as={Link}
                                     to="/"
-                                    className="fw-semibold nav-link-hover"
-                                    style={{ color: '#1F2937' }}
+                                    className={`fw-semibold nav-link-hover ${location.pathname === '/' ? 'active' : ''}`}
+                                    style={{ color: location.pathname === '/' ? '#0EA5E9' : '#1F2937' }}
                                 >
                                     Home
                                 </Nav.Link>
                                 <Nav.Link
                                     as={Link}
                                     to="/about"
-                                    className="fw-semibold nav-link-hover"
-                                    style={{ color: '#1F2937' }}
+                                    className={`fw-semibold nav-link-hover ${location.pathname === '/about' ? 'active' : ''}`}
+                                    style={{ color: location.pathname === '/about' ? '#0EA5E9' : '#1F2937' }}
                                 >
                                     About
                                 </Nav.Link>
                                 <Nav.Link
                                     as={Link}
                                     to="/resources"
-                                    className="fw-semibold nav-link-hover"
-                                    style={{ color: '#1F2937' }}
+                                    className={`fw-semibold nav-link-hover ${location.pathname === '/resources' ? 'active' : ''}`}
+                                    style={{ color: location.pathname === '/resources' ? '#0EA5E9' : '#1F2937' }}
                                 >
                                     Resources
                                 </Nav.Link>
                                 <Nav.Link
                                     as={Link}
                                     to="/news"
-                                    className="fw-semibold nav-link-hover"
-                                    style={{ color: '#1F2937' }}
+                                    className={`fw-semibold nav-link-hover ${location.pathname === '/news' ? 'active' : ''}`}
+                                    style={{ color: location.pathname === '/news' ? '#0EA5E9' : '#1F2937' }}
                                 >
                                     News
                                 </Nav.Link>
@@ -102,40 +103,40 @@ const Header = () => {
                                 <Nav.Link
                                     as={Link}
                                     to="/dashboard"
-                                    className="fw-semibold nav-link-hover"
-                                    style={{ color: '#1F2937' }}
+                                    className={`fw-semibold nav-link-hover ${location.pathname === '/dashboard' ? 'active' : ''}`}
+                                    style={{ color: location.pathname === '/dashboard' ? '#0EA5E9' : '#1F2937' }}
                                 >
                                     Dashboard
                                 </Nav.Link>
                                 <Nav.Link
                                     as={Link}
                                     to="/community"
-                                    className="fw-semibold nav-link-hover"
-                                    style={{ color: '#1F2937' }}
+                                    className={`fw-semibold nav-link-hover ${location.pathname === '/community' ? 'active' : ''}`}
+                                    style={{ color: location.pathname === '/community' ? '#0EA5E9' : '#1F2937' }}
                                 >
                                     Community
                                 </Nav.Link>
                                 <Nav.Link
                                     as={Link}
                                     to="/resources"
-                                    className="fw-semibold nav-link-hover"
-                                    style={{ color: '#1F2937' }}
+                                    className={`fw-semibold nav-link-hover ${location.pathname === '/resources' ? 'active' : ''}`}
+                                    style={{ color: location.pathname === '/resources' ? '#0EA5E9' : '#1F2937' }}
                                 >
                                     Resources
                                 </Nav.Link>
                                 <Nav.Link
                                     as={Link}
                                     to="/news"
-                                    className="fw-semibold nav-link-hover"
-                                    style={{ color: '#1F2937' }}
+                                    className={`fw-semibold nav-link-hover ${location.pathname === '/news' ? 'active' : ''}`}
+                                    style={{ color: location.pathname === '/news' ? '#0EA5E9' : '#1F2937' }}
                                 >
                                     News
                                 </Nav.Link>
                                 <Nav.Link
                                     as={Link}
                                     to="/chat"
-                                    className="fw-semibold nav-link-hover"
-                                    style={{ color: '#1F2937' }}
+                                    className={`fw-semibold nav-link-hover ${location.pathname === '/chat' ? 'active' : ''}`}
+                                    style={{ color: location.pathname === '/chat' ? '#0EA5E9' : '#1F2937' }}
                                 >
                                     AI Chatbot
                                 </Nav.Link>
@@ -217,7 +218,8 @@ const Header = () => {
                     transform: translateX(-50%);
                 }
                 
-                .nav-link-hover:hover::after {
+                .nav-link-hover:hover::after,
+                .nav-link-hover.active::after {
                     width: 100%;
                 }
                 

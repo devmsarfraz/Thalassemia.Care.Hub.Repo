@@ -248,3 +248,27 @@
     color: var(--primary);
     font-weight: 600;
 }
+
+/* News Items - Fix text overflow */
+.text-dark.text-decoration-none {
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.text-dark.text-decoration-none strong {
+    display: block;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* Post titles - Fix text overflow */
+.post-header-info h6,
+.fb-card-body h6 {
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}

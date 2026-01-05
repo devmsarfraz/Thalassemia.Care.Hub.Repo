@@ -105,7 +105,8 @@ def chat():
     Request body:
     {
         "message": "User message",
-        "session_id": "optional-session-id"
+        "session_id": "optional-session-id",
+        "conversation_id": "optional-conversation-id"
     }
     """
     try:
@@ -117,6 +118,7 @@ def chat():
         
         user_message = request.json['message']
         session_id = request.json.get('session_id', None)
+        conversation_id = request.json.get('conversation_id', None)
         
         # Validate message
         if not user_message or not user_message.strip():
@@ -124,21 +126,40 @@ def chat():
                 'error': 'Message cannot be empty'
             }), 400
         
-        logger.info(f"Chat request - Session: {session_id}, Message: '{user_message[:50]}...'")
+        logger.info(f"Chat request - Session: {session_id}, Conversation: {conversation_id}, Message: '{user_message[:50]}...'")
         
-        # Get response from chatbot
-        result = chatbot_service.get_response(user_message, session_id)
+        # Import conversation manager
+        from conversation_manager import get_conversation_manager
+        conv_manager = get_conversation_manager()
+        
+        # Create new conversation if not provided
+        if not conversation_id:
+            conversation_id = conv_manager.create_conversation()
+            logger.info(f"Created new conversation: {conversation_id}")
+        
+        # Add user message to conversation history
+        conv_manager.add_message(conversation_id, "user", user_message)
+        
+        # Get response from chatbot (with LLM fallback)
+        result = chatbot_service.get_response(user_message, session_id, conversation_id)
+        
+        # Add assistant response to conversation history
+        conv_manager.add_message(conversation_id, "assistant", result['response'])
         
         return jsonify({
             'success': True,
             'message': user_message,
             'response': result['response'],
             'confidence': result['confidence'],
-            'session_id': result.get('session_id')
+            'session_id': result.get('session_id'),
+            'conversation_id': conversation_id,
+            'used_llm': result.get('used_llm', False)
         }), 200
         
     except Exception as e:
         logger.error(f"Error in chat endpoint: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e),
