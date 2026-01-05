@@ -63,5 +63,23 @@ namespace thalassemiaCareHubv2.Interface
         /// <param name="userId">ID of the user requesting deletion</param>
         /// <returns>True if deletion was successful</returns>
         Task<bool> DeleteMessageAsync(int messageId, int userId);
+
+        /// <summary>
+        /// Save a user message to a chat session
+        /// </summary>
+        /// <param name="sessionId">ID of the chat session</param>
+        /// <param name="messageContent">Content of the user message</param>
+        /// <param name="userId">ID of the user</param>
+        /// <returns>Saved message response</returns>
+        Task<ChatMessageResponse?> SaveUserMessageAsync(int sessionId, string messageContent, int userId);
+
+        /// <summary>
+        /// Save an assistant message to a chat session
+        /// </summary>
+        /// <param name="sessionId">ID of the chat session</param>
+        /// <param name="messageContent">Content of the assistant message</param>
+        /// <param name="userId">ID of the user</param>
+        /// <returns>Saved message response</returns>
+        Task<ChatMessageResponse?> SaveAssistantMessageAsync(int sessionId, string messageContent, int userId);
     }
 }
