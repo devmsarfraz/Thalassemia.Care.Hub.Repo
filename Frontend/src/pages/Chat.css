@@ -19,7 +19,7 @@
     --sidebar-width: 260px;
     --content-max-width: 768px;
     --header-height: 64px;
-    --message-spacing: 24px;
+    --message-spacing: 16px;
 
     /* Colors - Lighter, more Gemini-like */
     --chat-primary: #6366f1;
@@ -78,15 +78,10 @@
 
 .chat-page {
     display: flex;
-    height: 100vh;
+    height: calc(100vh - 70px);
     background: var(--chat-bg-secondary);
     font-family: var(--chat-ui-font);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding-top: 70px;
+    overflow: hidden;
 }
 
 /* ============================================
@@ -336,9 +331,8 @@
     align-items: center;
     justify-content: center;
     padding: 0 var(--chat-spacing-xl);
-    position: sticky;
-    top: 0;
     z-index: 5;
+    flex-shrink: 0;
 }
 
 .sidebar-toggle-btn {
@@ -380,7 +374,7 @@
 .messages-area {
     flex: 1;
     overflow-y: auto;
-    padding: var(--chat-spacing-xl);
+    padding: var(--chat-spacing-xl) var(--chat-spacing-2xl);
     display: flex;
     flex-direction: column;
     scroll-behavior: smooth;
@@ -501,8 +495,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--message-spacing);
-    max-width: var(--content-max-width);
-    margin: 0 auto;
     width: 100%;
     padding-bottom: var(--chat-spacing-xl);
 }
@@ -510,7 +502,7 @@
 .message {
     display: flex;
     gap: var(--chat-spacing-md);
-    width: 100%;
+    max-width: 75%;
     animation: messageSlideIn 0.3s ease-out;
 }
 
@@ -529,10 +521,12 @@
 .message.user {
     align-self: flex-end;
     flex-direction: row-reverse;
+    margin-left: auto;
 }
 
 .message.assistant {
     align-self: flex-start;
+    margin-right: auto;
 }
 
 .message-avatar {
@@ -560,7 +554,7 @@
     flex-direction: column;
     gap: 0.375rem;
     max-width: 100%;
-    flex: 1;
+    min-width: 0;
 }
 
 /* User avatar image styling */
@@ -573,12 +567,13 @@
 .message-text {
     padding: 0.75rem 1rem;
     font-family: var(--chat-body-font);
-    font-size: 0.9375rem;
-    line-height: 1.6;
+    font-size: 0.875rem;
+    line-height: 1.5;
     border-radius: var(--chat-radius-lg);
     position: relative;
     word-wrap: break-word;
     white-space: pre-wrap;
+    overflow-wrap: break-word;
 }
 
 .message.user .message-text {
@@ -661,9 +656,8 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid var(--chat-border-light);
-    position: sticky;
-    bottom: 0;
     box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
 }
 
 .input-form {
@@ -756,7 +750,7 @@
 
 @media (max-width: 768px) {
     .chat-page {
-        padding-top: 60px;
+        height: calc(100vh - 60px);
     }
 
     .chat-sidebar {
