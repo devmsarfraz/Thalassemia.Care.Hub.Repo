@@ -112,9 +112,10 @@ const Home = () => {
               <Col lg={6} className="text-center">
                 <div className="hero-image-container">
                   <img
-                    src="/new her"
+                    src="/hero_medical_care.webp"
                     alt="Thalassemia Care"
                     className="hero-medical-image"
+                    style={{ maxWidth: '100%', height: 'auto', borderRadius: '20px' }}
                   />
                   <div className="hero-image-decoration"></div>
                 </div>
@@ -348,6 +349,77 @@ const Home = () => {
               )}
             </div>
           )}
+        </Container>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="section-modern">
+        <Container>
+          <div className="text-center mb-5">
+            <h2 className="section-title gradient-text">What Our Community Says</h2>
+            <p className="section-subtitle">
+              Real stories from real people in our community
+            </p>
+          </div>
+          <Row className="g-4">
+            <Col md={4} className="fade-in">
+              <div className="testimonial-card">
+                <div className="quote-icon mb-3">
+                  <FaQuoteLeft />
+                </div>
+                <p className="testimonial-text mb-4">
+                  "This platform has been a lifeline for me. The AI chatbot helped me understand my treatment better, and the community support is incredible. I don't feel alone anymore."
+                </p>
+                <div className="d-flex align-items-center">
+                  <div className="testimonial-avatar me-3">
+                    <FaUser />
+                  </div>
+                  <div>
+                    <h6 className="mb-0 fw-bold">Sarah M.</h6>
+                    <small className="text-muted">Thalassemia Patient</small>
+                  </div>
+                </div>
+              </div>
+            </Col>
+            <Col md={4} className="fade-in" style={{ animationDelay: '0.1s' }}>
+              <div className="testimonial-card">
+                <div className="quote-icon mb-3">
+                  <FaQuoteLeft />
+                </div>
+                <p className="testimonial-text mb-4">
+                  "As a caregiver, I was overwhelmed with information. This hub organized everything I needed to know and connected me with others going through the same journey."
+                </p>
+                <div className="d-flex align-items-center">
+                  <div className="testimonial-avatar me-3">
+                    <FaUser />
+                  </div>
+                  <div>
+                    <h6 className="mb-0 fw-bold">Ahmed K.</h6>
+                    <small className="text-muted">Parent & Caregiver</small>
+                  </div>
+                </div>
+              </div>
+            </Col>
+            <Col md={4} className="fade-in" style={{ animationDelay: '0.2s' }}>
+              <div className="testimonial-card">
+                <div className="quote-icon mb-3">
+                  <FaQuoteLeft />
+                </div>
+                <p className="testimonial-text mb-4">
+                  "The resources section is comprehensive and easy to understand. I recommend this platform to all my patients and their families. It's making a real difference."
+                </p>
+                <div className="d-flex align-items-center">
+                  <div className="testimonial-avatar me-3">
+                    <FaUser />
+                  </div>
+                  <div>
+                    <h6 className="mb-0 fw-bold">Dr. Lisa Chen</h6>
+                    <small className="text-muted">Hematologist</small>
+                  </div>
+                </div>
+              </div>
+            </Col>
+          </Row>
         </Container>
       </section>
 

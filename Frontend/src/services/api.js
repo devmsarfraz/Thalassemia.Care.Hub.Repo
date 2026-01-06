@@ -105,6 +105,7 @@ export const newsAPI = {
 export const chatAPI = {
   createSession: (data) => api.post('/chat/session', data),
   getSessions: () => api.get('/chat/history'),
+  getSessionsCount: () => api.get('/chat/sessions/count'),
   getSessionHistory: (sessionId) => api.get(`/chat/history/${sessionId}`),
   sendMessage: (sessionId, data) => api.post(`/chat/session/${sessionId}/message`, data),
   updateSession: (sessionId, data) => api.put(`/chat/session/${sessionId}`, data),
