@@ -45,7 +45,9 @@ const Chat = () => {
     const textareaRef = useRef(null)
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        }
     }
 
     useEffect(() => {
@@ -180,18 +182,10 @@ const Chat = () => {
     }
 
     const handleNewChat = async () => {
-        try {
-            const createRes = await chatAPI.createSession({
-                sessionTitle: "New Chat"
-            })
-            if (createRes.data) {
-                setCurrentSessionId(createRes.data.chatSessionId)
-                fetchSessions()
-                setMessages([])
-            }
-        } catch (error) {
-            console.error("Error creating new chat:", error)
-        }
+        // Don't create a session immediately, just clear the current session
+        // A new session will be created when the user sends their first message
+        setCurrentSessionId(null)
+        setMessages([])
     }
 
     const handleDeleteSession = async (sessionId, e) => {

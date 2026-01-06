@@ -18,16 +18,24 @@ namespace thalassemiaCareHubv2.Controllers
         private readonly IChatService _chatService;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
-        private readonly string _geminiApiKey;
-        private readonly string _geminiApiUrl;
+        private readonly string _groqApiKey;
+        private readonly string _groqApiUrl;
+        private readonly string _groqModel;
+        // Commented out Gemini configuration
+        // private readonly string _geminiApiKey;
+        // private readonly string _geminiApiUrl;
 
         public ChatController(IChatService chatService, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _chatService = chatService;
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
-            _geminiApiKey = _configuration["Gemini:ApiKey"] ?? throw new ArgumentNullException("Gemini:ApiKey");
-            _geminiApiUrl = _configuration["Gemini:ApiUrl"] ?? throw new ArgumentNullException("Gemini:ApiUrl");
+            _groqApiKey = _configuration["Groq:ApiKey"] ?? throw new ArgumentNullException("Groq:ApiKey");
+            _groqApiUrl = _configuration["Groq:ApiUrl"] ?? throw new ArgumentNullException("Groq:ApiUrl");
+            _groqModel = _configuration["Groq:Model"] ?? "llama-3.3-70b-versatile";
+            // Commented out Gemini initialization
+            // _geminiApiKey = _configuration["Gemini:ApiKey"] ?? throw new ArgumentNullException("Gemini:ApiKey");
+            // _geminiApiUrl = _configuration["Gemini:ApiUrl"] ?? throw new ArgumentNullException("Gemini:ApiUrl");
         }
 
         /// <summary>
@@ -83,6 +91,33 @@ namespace thalassemiaCareHubv2.Controllers
 
                 var sessions = await _chatService.GetUserSessionsAsync(userId.Value);
                 return Ok(sessions);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Internal server error: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Get count of chat sessions for the current user (for dashboard stats)
+        /// </summary>
+        /// <returns>Count of user's chat sessions</returns>
+        /// <response code="200">Count retrieved successfully</response>
+        /// <response code="401">User not authenticated</response>
+        [HttpGet("sessions/count")]
+        [Authorize]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 401)]
+        public async Task<ActionResult<object>> GetUserSessionsCount()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                if (userId == null)
+                    return Unauthorized(new { message = "User not authenticated" });
+
+                var sessions = await _chatService.GetUserSessionsAsync(userId.Value);
+                return Ok(new { count = sessions.Count });
             }
             catch (Exception ex)
             {
@@ -166,11 +201,11 @@ namespace thalassemiaCareHubv2.Controllers
         */
 
         /// <summary>
-        /// Send a message to the AI chatbot using Google Gemini API
+        /// Send a message to the AI chatbot using Groq API
         /// </summary>
         /// <param name="sessionId">Chat session ID</param>
         /// <param name="request">Message to send</param>
-        /// <returns>User message and AI response from Gemini</returns>
+        /// <returns>User message and AI response from Groq</returns>
         /// <response code="200">Message sent and AI responded successfully</response>
         /// <response code="401">User not authenticated</response>
         /// <response code="404">Session not found or access denied</response>
@@ -181,7 +216,7 @@ namespace thalassemiaCareHubv2.Controllers
         [ProducesResponseType(typeof(object), 401)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 400)]
-        public async Task<ActionResult<SendMessageResponse>> SendMessageWithGemini(int sessionId, [FromBody] SendMessageRequest request)
+        public async Task<ActionResult<SendMessageResponse>> SendMessageWithGroq(int sessionId, [FromBody] SendMessageRequest request)
         {
             try
             {
@@ -202,8 +237,8 @@ namespace thalassemiaCareHubv2.Controllers
                 if (userMessage == null)
                     return BadRequest(new { message = "Failed to save user message" });
 
-                // Get AI response from Gemini
-                var aiResponse = await GetGeminiResponseAsync(request.MessageContent, session.Messages);
+                // Get AI response from Groq
+                var aiResponse = await GetGroqResponseAsync(request.MessageContent, session.Messages);
                 
                 // Save AI response to database
                 var assistantMessage = await _chatService.SaveAssistantMessageAsync(sessionId, aiResponse, userId.Value);
@@ -218,12 +253,95 @@ namespace thalassemiaCareHubv2.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in SendMessageWithGemini: {ex.Message}");
+                Console.WriteLine($"Error in SendMessageWithGroq: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return StatusCode(500, new { message = $"Internal server error: {ex.Message}" });
             }
         }
 
+        /// <summary>
+        /// Get AI response from Groq API (OpenAI-compatible)
+        /// </summary>
+        private async Task<string> GetGroqResponseAsync(string userMessage, List<ChatMessageResponse> conversationHistory)
+        {
+            try
+            {
+                var httpClient = _httpClientFactory.CreateClient();
+                httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_groqApiKey}");
+                
+                // Build conversation messages in OpenAI format
+                var messages = new List<object>();
+                
+                // Add system message
+                messages.Add(new
+                {
+                    role = "system",
+                    content = "You are a helpful AI assistant specialized in Thalassemia care and health information. Provide accurate, empathetic, and informative responses to help patients and caregivers."
+                });
+
+                // Add conversation history (last 10 messages for context)
+                var recentMessages = conversationHistory.TakeLast(10).ToList();
+                foreach (var msg in recentMessages)
+                {
+                    messages.Add(new
+                    {
+                        role = msg.SenderType == "User" ? "user" : "assistant",
+                        content = msg.MessageContent
+                    });
+                }
+
+                // Add current user message
+                messages.Add(new
+                {
+                    role = "user",
+                    content = userMessage
+                });
+
+                // Prepare request body (OpenAI-compatible format)
+                var requestBody = new
+                {
+                    model = _groqModel,
+                    messages = messages,
+                    temperature = 0.7,
+                    max_tokens = 1024,
+                    top_p = 0.95
+                };
+
+                var jsonContent = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                // Make API call
+                var response = await httpClient.PostAsync(_groqApiUrl, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Groq API error: {responseContent}");
+                    return "I apologize, but I'm having trouble processing your request right now. Please try again later.";
+                }
+
+                // Parse response (OpenAI format)
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var choices = jsonDoc.RootElement.GetProperty("choices");
+                if (choices.GetArrayLength() > 0)
+                {
+                    var firstChoice = choices[0];
+                    var message = firstChoice.GetProperty("message");
+                    var assistantContent = message.GetProperty("content").GetString();
+                    return assistantContent ?? "I apologize, but I couldn't generate a response.";
+                }
+
+                return "I apologize, but I couldn't generate a response. Please try again.";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calling Groq API: {ex.Message}");
+                return "I apologize, but I'm experiencing technical difficulties. Please try again later.";
+            }
+        }
+
+        // COMMENTED OUT - Old Gemini API implementation
+        /*
         /// <summary>
         /// Get AI response from Google Gemini API
         /// </summary>
@@ -232,67 +350,21 @@ namespace thalassemiaCareHubv2.Controllers
             try
             {
                 var httpClient = _httpClientFactory.CreateClient();
-                
-                // Build conversation context
                 var contents = new List<object>();
-                
-                // Add system instruction as first message
-                contents.Add(new
-                {
-                    role = "user",
-                    parts = new[] { new { text = "You are a helpful AI assistant specialized in Thalassemia care and health information. Provide accurate, empathetic, and informative responses to help patients and caregivers." } }
-                });
-                contents.Add(new
-                {
-                    role = "model",
-                    parts = new[] { new { text = "I understand. I'm here to help with Thalassemia-related questions and provide supportive, accurate health information." } }
-                });
-
-                // Add conversation history (last 10 messages for context)
+                contents.Add(new { role = "user", parts = new[] { new { text = "You are a helpful AI assistant specialized in Thalassemia care and health information." } } });
+                contents.Add(new { role = "model", parts = new[] { new { text = "I understand. I'm here to help with Thalassemia-related questions." } } });
                 var recentMessages = conversationHistory.TakeLast(10).ToList();
                 foreach (var msg in recentMessages)
                 {
-                    contents.Add(new
-                    {
-                        role = msg.SenderType == "User" ? "user" : "model",
-                        parts = new[] { new { text = msg.MessageContent } }
-                    });
+                    contents.Add(new { role = msg.SenderType == "User" ? "user" : "model", parts = new[] { new { text = msg.MessageContent } } });
                 }
-
-                // Add current user message
-                contents.Add(new
-                {
-                    role = "user",
-                    parts = new[] { new { text = userMessage } }
-                });
-
-                // Prepare request body
-                var requestBody = new
-                {
-                    contents = contents,
-                    generationConfig = new
-                    {
-                        temperature = 0.7,
-                        topK = 40,
-                        topP = 0.95,
-                        maxOutputTokens = 1024
-                    }
-                };
-
+                contents.Add(new { role = "user", parts = new[] { new { text = userMessage } } });
+                var requestBody = new { contents = contents, generationConfig = new { temperature = 0.7, topK = 40, topP = 0.95, maxOutputTokens = 1024 } };
                 var jsonContent = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                // Make API call
                 var response = await httpClient.PostAsync($"{_geminiApiUrl}?key={_geminiApiKey}", content);
                 var responseContent = await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine($"Gemini API error: {responseContent}");
-                    return "I apologize, but I'm having trouble processing your request right now. Please try again later.";
-                }
-
-                // Parse response
+                if (!response.IsSuccessStatusCode) return "I apologize, but I'm having trouble processing your request right now.";
                 using var jsonDoc = JsonDocument.Parse(responseContent);
                 var candidates = jsonDoc.RootElement.GetProperty("candidates");
                 if (candidates.GetArrayLength() > 0)
@@ -300,20 +372,17 @@ namespace thalassemiaCareHubv2.Controllers
                     var firstCandidate = candidates[0];
                     var content_property = firstCandidate.GetProperty("content");
                     var parts = content_property.GetProperty("parts");
-                    if (parts.GetArrayLength() > 0)
-                    {
-                        return parts[0].GetProperty("text").GetString() ?? "I apologize, but I couldn't generate a response.";
-                    }
+                    if (parts.GetArrayLength() > 0) return parts[0].GetProperty("text").GetString() ?? "I apologize, but I couldn't generate a response.";
                 }
-
                 return "I apologize, but I couldn't generate a response. Please try again.";
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error calling Gemini API: {ex.Message}");
-                return "I apologize, but I'm experiencing technical difficulties. Please try again later.";
+                return "I apologize, but I'm experiencing technical difficulties.";
             }
         }
+        */
 
         /// <summary>
         /// Update a chat session title
