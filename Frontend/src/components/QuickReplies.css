@@ -1,0 +1,101 @@
+.quick-replies-container {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
+    border-radius: 0.75rem;
+    border: 1px solid var(--chat-border-light, #e0f2fe);
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.quick-replies-title {
+    font-family: var(--chat-heading-font, 'Inter', sans-serif);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--chat-text-primary, #0c4a6e);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quick-replies-title svg {
+    color: var(--chat-primary, #0ea5e9);
+}
+
+.quick-replies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.75rem;
+}
+
+.quick-category {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid var(--chat-border-light, #e0f2fe);
+    transition: all var(--chat-transition-base, 300ms ease);
+}
+
+.quick-category:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+    border-color: var(--chat-primary-light, #38bdf8);
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--chat-text-primary, #0c4a6e);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.category-header svg {
+    color: var(--chat-primary, #0ea5e9);
+    font-size: 1rem;
+}
+
+.category-prompts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.prompt-btn {
+    background: var(--chat-bg-secondary, #f0f9ff);
+    border: 1px solid var(--chat-border-light, #e0f2fe);
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-size: 0.75rem;
+    color: var(--chat-text-secondary, #475569);
+    cursor: pointer;
+    transition: all var(--chat-transition-fast, 150ms ease);
+    font-family: var(--chat-ui-font, 'Inter', sans-serif);
+}
+
+.prompt-btn:hover {
+    background: var(--chat-primary, #0ea5e9);
+    color: white;
+    border-color: var(--chat-primary, #0ea5e9);
+    transform: translateX(4px);
+}
+
+.prompt-btn:active {
+    transform: translateX(2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .quick-replies-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-replies-container {
+        padding: 0.75rem;
+        max-height: 300px;
+    }
+}
