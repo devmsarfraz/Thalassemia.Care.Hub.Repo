@@ -74,10 +74,9 @@ const Community = () => {
         postsAPI.getAll(),
         newsAPI.getAll()
       ])
-      // Reverse posts to show newest first
-      const sortedPosts = postsRes.data.reverse()
-      setPosts(sortedPosts)
-      setFilteredPosts(sortedPosts)
+      // Backend already returns posts sorted by creation date (newest first)
+      setPosts(postsRes.data)
+      setFilteredPosts(postsRes.data)
 
       const sortedNews = newsRes.data
         .sort((a, b) => new Date(b.publicationDate) - new Date(a.publicationDate))
