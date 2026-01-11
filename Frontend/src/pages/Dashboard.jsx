@@ -339,7 +339,7 @@ const Dashboard = () => {
             <Card.Header className="bg-white border-bottom">
               <h5 className="mb-0 fw-bold">
                 <FaClock className="me-2 text-primary" />
-                Recent Activity
+                Recent Posts
               </h5>
             </Card.Header>
             <Card.Body>
