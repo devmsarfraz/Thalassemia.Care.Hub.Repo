@@ -36,12 +36,11 @@ namespace thalassemiaCareHubv2.Services
         {
             try
             {
-                var posts = await _CommunityPostRepository.GetAllPosts();
-                var postResponses = new List<PostResponse>();
+                var postResponses = await _CommunityPostRepository.GetAllPostsWithDetailsAsync(currentUserId);
                 
-                foreach (var post in posts)
+                foreach (var post in postResponses)
                 {
-                    postResponses.Add(await MapToPostResponseAsync(post, currentUserId));
+                    post.Comments = RebuildCommentTree(post.Comments);
                 }
                 
                 return postResponses;
@@ -266,6 +265,29 @@ namespace thalassemiaCareHubv2.Services
                 IsLiked = isLiked,
                 Comments = BuildCommentTree(post.Comments)
             };
+        }
+
+        private List<CommentResponse> RebuildCommentTree(List<CommentResponse> flatComments)
+        {
+            if (flatComments == null || !flatComments.Any())
+                return new List<CommentResponse>();
+
+            var commentDict = flatComments.ToDictionary(c => c.CommentId);
+            var rootComments = new List<CommentResponse>();
+
+            foreach (var comment in flatComments)
+            {
+                if (comment.ParentCommentId.HasValue && commentDict.TryGetValue(comment.ParentCommentId.Value, out var parent))
+                {
+                    parent.Replies.Add(comment);
+                }
+                else
+                {
+                    rootComments.Add(comment);
+                }
+            }
+
+            return rootComments.OrderBy(c => c.CreationDate).ToList();
         }
 
         private List<CommentResponse> BuildCommentTree(ICollection<Comment>? comments)

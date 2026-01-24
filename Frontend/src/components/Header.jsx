@@ -150,6 +150,7 @@ const Header = () => {
                                     }
                                     id="user-dropdown"
                                     align="end"
+                                    className="user-profile-dropdown"
                                 >
                                     <NavDropdown.Item as={Link} to={`/profile/${user.userId}`}>
                                         My Profile
@@ -196,7 +197,11 @@ const Header = () => {
                 </Navbar.Collapse>
             </Container>
 
-            <style jsx>{`
+            <style>{`
+                .navbar {
+                    z-index: 1100 !important;
+                }
+
                 .nav-link-hover {
                     position: relative;
                     transition: color 0.3s ease;
@@ -228,6 +233,37 @@ const Header = () => {
                     border-color: #EF4444 !important;
                     transform: translateY(-2px);
                     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+                }
+
+                /* Custom User Dropdown Styles - Enforced */
+                .user-profile-dropdown .dropdown-menu {
+                    background-color: #ffffff !important;
+                    border: 1px solid #e5e7eb !important;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+                    border-radius: 12px !important;
+                    padding: 8px !important;
+                    min-width: 220px !important;
+                    z-index: 10000 !important;
+                    margin-top: 10px !important;
+                    display: none; /* Let Bootstrap handle display */
+                }
+
+                .user-profile-dropdown .dropdown-menu.show {
+                    display: block !important;
+                }
+
+                .user-profile-dropdown .dropdown-item {
+                    border-radius: 8px !important;
+                    padding: 10px 15px !important;
+                    font-weight: 500 !important;
+                    color: #374151 !important;
+                    margin-bottom: 2px !important;
+                    transition: all 0.2s ease !important;
+                }
+
+                .user-profile-dropdown .dropdown-item:hover {
+                    background-color: #F3F4F6 !important;
+                    color: #0EA5E9 !important;
                 }
             `}</style>
         </Navbar>

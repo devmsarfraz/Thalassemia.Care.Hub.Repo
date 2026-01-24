@@ -5,6 +5,7 @@ import { newsAPI } from '../services/api'
 import { toast } from 'react-toastify'
 import { FaSearch, FaClock, FaNewspaper, FaUser, FaArrowRight, FaBookmark } from 'react-icons/fa'
 import { API_BASE_URL } from '../config/api'
+import NewsSkeleton from '../components/NewsSkeleton'
 import '../styles/news-styles.css'
 
 const News = () => {
@@ -261,20 +262,16 @@ const News = () => {
           </Row>
         )}
 
-        {/* Loading State */}
+        {/* Loading State or News Cards Grid */}
         {isLoading ? (
-          <Row>
-            <Col className="text-center py-5">
-              <Spinner animation="border" style={{ color: 'var(--news-primary)' }} />
-              <p style={{
-                fontFamily: 'var(--news-ui-font)',
-                color: 'var(--news-text-light)',
-                marginTop: '1rem'
-              }}>
-                Loading news articles...
-              </p>
-            </Col>
-          </Row>
+          <div className="news-grid">
+            <NewsSkeleton />
+            <NewsSkeleton />
+            <NewsSkeleton />
+            <NewsSkeleton />
+            <NewsSkeleton />
+            <NewsSkeleton />
+          </div>
         ) : (
           /* News Cards Grid */
           <>

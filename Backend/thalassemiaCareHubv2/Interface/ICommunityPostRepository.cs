@@ -8,6 +8,7 @@ namespace thalassemiaCareHubv2.Interface
         // Post operations
         Task<Post?> CreatePost(Post post);
         Task<List<Post>> GetAllPosts();
+        Task<List<PostResponse>> GetAllPostsWithDetailsAsync(int? currentUserId);
         Task<Post?> GetPostById(int postId);
         Task<Post?> UpdatePost(int postId, UpdatePostRequest request);
         Task<bool> DeletePost(int postId);
