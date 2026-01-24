@@ -12,9 +12,6 @@ out/
 venv/
 .venv/
 
-# Static files
-Backend/thalassemiaCareHubv2/wwwroot/
-
 # ASP.NET Core / .NET
 *.dll
 *.exe
