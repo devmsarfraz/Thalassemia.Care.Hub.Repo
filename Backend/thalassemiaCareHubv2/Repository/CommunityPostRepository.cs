@@ -42,6 +42,52 @@ namespace thalassemiaCareHubv2.Repository
             }
         }
 
+        public async Task<List<PostResponse>> GetAllPostsWithDetailsAsync(int? currentUserId)
+        {
+            try
+            {
+                var query = _context.Posts
+                    .Where(p => !p.IsDelete)
+                    .OrderByDescending(p => p.CreationDate)
+                    .Select(p => new PostResponse
+                    {
+                        PostId = p.PostId,
+                        UserId = p.UserId,
+                        UserName = (p.User.FirstName + " " + p.User.LastName).Trim(),
+                        ProfilePicture = p.User.ProfilePicture,
+                        PostTitle = p.PostTitle,
+                        PostContent = p.PostContent,
+                        MediaUrl = p.MediaUrl,
+                        Category = p.Category,
+                        CreationDate = p.CreationDate,
+                        LastEditedDate = p.LastEditedDate,
+                        LikeCount = _context.PostLikes.Count(l => l.PostId == p.PostId),
+                        IsLiked = currentUserId.HasValue ? _context.PostLikes.Any(l => l.PostId == p.PostId && l.UserId == currentUserId) : false,
+                        Comments = p.Comments.Where(c => !c.IsDelete).Select(c => new CommentResponse
+                        {
+                            CommentId = c.CommentId,
+                            PostId = c.PostId,
+                            UserId = c.UserId,
+                            UserName = (c.User.FirstName + " " + c.User.LastName).Trim(),
+                            ProfilePicture = c.User.ProfilePicture,
+                            CommentContent = c.CommentContent,
+                            CreationDate = c.CreationDate,
+                            LastEditedDate = c.LastEditedDate,
+                            ParentCommentId = c.ParentCommentId,
+                            Media = new List<MediaResponse>()
+                        }).ToList(),
+                        Media = new List<MediaResponse>()
+                    });
+
+                return await query.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving posts with details: {ex.Message}");
+                return new List<PostResponse>();
+            }
+        }
+
         public async Task<Post?> GetPostById(int postId)
         {
             try
