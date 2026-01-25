@@ -229,6 +229,31 @@ const Header = () => {
                     transform: translateY(-2px);
                     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
                 }
+
+                /* Custom User Dropdown Styles */
+                #user-dropdown + .dropdown-menu {
+                    border: none;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+                    border-radius: 12px;
+                    padding: 8px;
+                    min-width: 200px;
+                    background-color: #ffffff !important;
+                    z-index: 1050;
+                    margin-top: 10px;
+                }
+
+                #user-dropdown + .dropdown-menu .dropdown-item {
+                    border-radius: 8px;
+                    padding: 10px 15px;
+                    font-weight: 500;
+                    color: #4B5563;
+                    transition: all 0.2s ease;
+                }
+
+                #user-dropdown + .dropdown-menu .dropdown-item:hover {
+                    background-color: #F3F4F6;
+                    color: #0EA5E9;
+                }
             `}</style>
         </Navbar>
     )

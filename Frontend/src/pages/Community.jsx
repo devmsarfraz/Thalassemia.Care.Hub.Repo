@@ -11,7 +11,8 @@ import {
   FaFlag, FaUsers, FaEdit, FaTrash, FaEllipsisH
 } from 'react-icons/fa'
 import './Community.css'
-import CommentItem from '../components/CommentItem'
+import PostSkeleton from '../components/PostSkeleton'
+import NewsSkeleton from '../components/NewsSkeleton'
 
 const Community = () => {
   const CATEGORIES = [
@@ -32,6 +33,7 @@ const Community = () => {
   const [newPost, setNewPost] = useState({ postTitle: '', postContent: '', mediaUrl: '', category: 'General' })
   const [editingPost, setEditingPost] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [loading, setLoading] = useState(true) // Add loading state
   const [expandedPosts, setExpandedPosts] = useState([]) // Array of postIds with expanded comments
   const [commentText, setCommentText] = useState({}) // Object mapping postId -> text
   const [selectedImage, setSelectedImage] = useState(null)
@@ -69,6 +71,7 @@ const Community = () => {
   }, [searchQuery, posts, selectedCategory])
 
   const loadData = async () => {
+    setLoading(true) // Start loading
     try {
       const [postsRes, newsRes] = await Promise.all([
         postsAPI.getAll(),
@@ -86,6 +89,8 @@ const Community = () => {
     } catch (error) {
       console.error(error)
       toast.error('Failed to load community data')
+    } finally {
+      setLoading(false) // Stop loading
     }
   }
 
@@ -346,141 +351,150 @@ const Community = () => {
             </Card>
 
             {/* Posts Feed */}
-            {currentPosts.map((post) => (
-              <Card key={post.postId} className="fb-card post-card">
-                <div className="fb-card-header justify-content-between">
-                  <div className="d-flex align-items-center">
-                    {post.profilePicture ? (
-                      <Image
-                        src={`${API_BASE_URL.replace('/api', '')}${post.profilePicture}`}
-                        roundedCircle
-                        width="40"
-                        height="40"
-                        className="me-2 object-fit-cover"
-                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'inline-block'; }}
-                      />
-                    ) : null}
-                    <FaUserCircle size={40} className="text-secondary me-2" style={{ display: post.profilePicture ? 'none' : 'inline-block' }} />
-                    <div className="post-header-info">
-                      <h6>{post.userName || `${post.user?.firstName} ${post.user?.lastName}`}</h6>
-                      <small className="text-muted">
-                        {new Date(post.creationDate).toLocaleString()} ·
-                        <span className="ms-1 badge bg-light text-dark border">{CATEGORIES.find(c => c.id === post.category)?.label || post.category || 'General'}</span>
-                      </small>
-                    </div>
-                  </div>
-
-                  <Dropdown align="end">
-                    <Dropdown.Toggle variant="link" className="text-secondary p-0 border-0 no-caret">
-                      <FaEllipsisH />
-                    </Dropdown.Toggle>
-
-                    <Dropdown.Menu>
-                      <Dropdown.Item as={Link} to={`/community/post/${post.postId}`}>
-                        Show in Detail
-                      </Dropdown.Item>
-                      {user && user.userId === post.userId && (
-                        <>
-                          <Dropdown.Divider />
-                          <Dropdown.Item onClick={() => handleEditClick(post)}>
-                            <FaEdit className="me-2" /> Edit Post
-                          </Dropdown.Item>
-                          <Dropdown.Item className="text-danger" onClick={() => handleDeletePost(post.postId)}>
-                            <FaTrash className="me-2" /> Delete Post
-                          </Dropdown.Item>
-                        </>
-                      )}
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </div>
-
-                <div className="fb-card-body">
-                  <h6 className="mb-2 fw-bold">{post.postTitle}</h6>
-                  <div className="post-content">
-                    {post.postContent}
-                  </div>
-                </div>
-
-                {post.mediaUrl && (
-                  <div className="post-media" onClick={() => setSelectedImage(post.mediaUrl)}>
-                    <img src={post.mediaUrl} alt="Post content" />
-                  </div>
-                )}
-
-                <div className="post-stats">
-                  <div>
-                    <FaThumbsUp className="text-primary me-1" />
-                    {post.likeCount || 0}
-                  </div>
-                  <div>
-                    {post.comments ? post.comments.length : 0} comments
-                  </div>
-                </div>
-
-                <div className="post-actions">
-                  <button
-                    className={`post-action-btn ${post.isLiked ? 'active' : ''}`}
-                    onClick={() => toggleLike(post.postId)}
-                  >
-                    <FaThumbsUp className="me-2" /> Like
-                  </button>
-                  <button
-                    className="post-action-btn"
-                    onClick={() => toggleComments(post.postId)}
-                  >
-                    <FaComment className="me-2" /> Comment
-                  </button>
-                  <button className="post-action-btn" onClick={() => handleShare(post.postId)}>
-                    <FaShare className="me-2" /> Share
-                  </button>
-                </div>
-
-                {/* Inline Comment Section */}
-                {expandedPosts.includes(post.postId) && (
-                  <div className="p-3 border-top bg-light">
-                    {/* Existing Comments */}
-                    {post.comments && post.comments.length > 0 && (
-                      <div className="mb-3">
-                        {post.comments.map(comment => (
-                          <CommentItem
-                            key={comment.commentId}
-                            comment={comment}
-                            postId={post.postId}
-                            currentUserId={user?.userId}
-                            onReply={(pid, text, parentId) => handlePostComment(pid, text, parentId)}
-                            onEdit={handleUpdateComment}
-                            onDelete={handleDeleteComment}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Add Comment Input */}
-                    <Form onSubmit={(e) => handleInlineCommentSubmit(e, post.postId)} className="d-flex gap-2">
-                      {user?.profilePicture ? (
+            {loading ? (
+              // Show Skeletons while loading
+              <>
+                <PostSkeleton />
+                <PostSkeleton />
+                <PostSkeleton />
+              </>
+            ) : (
+              currentPosts.map((post) => (
+                <Card key={post.postId} className="fb-card post-card">
+                  <div className="fb-card-header justify-content-between">
+                    <div className="d-flex align-items-center">
+                      {post.profilePicture ? (
                         <Image
-                          src={`${API_BASE_URL.replace('/api', '')}${user.profilePicture}`}
+                          src={`${API_BASE_URL.replace('/api', '')}${post.profilePicture}`}
                           roundedCircle
-                          width="32"
-                          height="32"
-                          className="mt-1 object-fit-cover"
+                          width="40"
+                          height="40"
+                          className="me-2 object-fit-cover"
                           onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'inline-block'; }}
                         />
                       ) : null}
-                      <FaUserCircle size={32} className="text-secondary mt-1" style={{ display: user?.profilePicture ? 'none' : 'inline-block' }} />
-                      <Form.Control
-                        type="text"
-                        placeholder="Write a comment..."
-                        className="rounded-pill bg-white"
-                        value={commentText[post.postId] || ''}
-                        onChange={(e) => handleCommentChange(post.postId, e.target.value)}
-                      />
+                      <FaUserCircle size={40} className="text-secondary me-2" style={{ display: post.profilePicture ? 'none' : 'inline-block' }} />
+                      <div className="post-header-info">
+                        <h6>{post.userName || `${post.user?.firstName} ${post.user?.lastName}`}</h6>
+                        <small className="text-muted">
+                          {new Date(post.creationDate).toLocaleString()} ·
+                          <span className="ms-1 badge bg-light text-dark border">{CATEGORIES.find(c => c.id === post.category)?.label || post.category || 'General'}</span>
+                        </small>
+                      </div>
+                    </div>
 
-                    </Form>
+                    <Dropdown align="end">
+                      <Dropdown.Toggle variant="link" className="text-secondary p-0 border-0 no-caret">
+                        <FaEllipsisH />
+                      </Dropdown.Toggle>
+
+                      <Dropdown.Menu>
+                        <Dropdown.Item as={Link} to={`/community/post/${post.postId}`}>
+                          Show in Detail
+                        </Dropdown.Item>
+                        {user && user.userId === post.userId && (
+                          <>
+                            <Dropdown.Divider />
+                            <Dropdown.Item onClick={() => handleEditClick(post)}>
+                              <FaEdit className="me-2" /> Edit Post
+                            </Dropdown.Item>
+                            <Dropdown.Item className="text-danger" onClick={() => handleDeletePost(post.postId)}>
+                              <FaTrash className="me-2" /> Delete Post
+                            </Dropdown.Item>
+                          </>
+                        )}
+                      </Dropdown.Menu>
+                    </Dropdown>
                   </div>
-                )}
-              </Card>
-            ))}
+
+                  <div className="fb-card-body">
+                    <h6 className="mb-2 fw-bold">{post.postTitle}</h6>
+                    <div className="post-content">
+                      {post.postContent}
+                    </div>
+                  </div>
+
+                  {post.mediaUrl && (
+                    <div className="post-media" onClick={() => setSelectedImage(post.mediaUrl)}>
+                      <img src={post.mediaUrl} alt="Post content" />
+                    </div>
+                  )}
+
+                  <div className="post-stats">
+                    <div>
+                      <FaThumbsUp className="text-primary me-1" />
+                      {post.likeCount || 0}
+                    </div>
+                    <div>
+                      {post.comments ? post.comments.length : 0} comments
+                    </div>
+                  </div>
+
+                  <div className="post-actions">
+                    <button
+                      className={`post-action-btn ${post.isLiked ? 'active' : ''}`}
+                      onClick={() => toggleLike(post.postId)}
+                    >
+                      <FaThumbsUp className="me-2" /> Like
+                    </button>
+                    <button
+                      className="post-action-btn"
+                      onClick={() => toggleComments(post.postId)}
+                    >
+                      <FaComment className="me-2" /> Comment
+                    </button>
+                    <button className="post-action-btn" onClick={() => handleShare(post.postId)}>
+                      <FaShare className="me-2" /> Share
+                    </button>
+                  </div>
+
+                  {/* Inline Comment Section */}
+                  {expandedPosts.includes(post.postId) && (
+                    <div className="p-3 border-top bg-light">
+                      {/* Existing Comments */}
+                      {post.comments && post.comments.length > 0 && (
+                        <div className="mb-3">
+                          {post.comments.map(comment => (
+                            <CommentItem
+                              key={comment.commentId}
+                              comment={comment}
+                              postId={post.postId}
+                              currentUserId={user?.userId}
+                              onReply={(pid, text, parentId) => handlePostComment(pid, text, parentId)}
+                              onEdit={handleUpdateComment}
+                              onDelete={handleDeleteComment}
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Add Comment Input */}
+                      <Form onSubmit={(e) => handleInlineCommentSubmit(e, post.postId)} className="d-flex gap-2">
+                        {user?.profilePicture ? (
+                          <Image
+                            src={`${API_BASE_URL.replace('/api', '')}${user.profilePicture}`}
+                            roundedCircle
+                            width="32"
+                            height="32"
+                            className="mt-1 object-fit-cover"
+                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'inline-block'; }}
+                          />
+                        ) : null}
+                        <FaUserCircle size={32} className="text-secondary mt-1" style={{ display: user?.profilePicture ? 'none' : 'inline-block' }} />
+                        <Form.Control
+                          type="text"
+                          placeholder="Write a comment..."
+                          className="rounded-pill bg-white"
+                          value={commentText[post.postId] || ''}
+                          onChange={(e) => handleCommentChange(post.postId, e.target.value)}
+                        />
+
+                      </Form>
+                    </div>
+                  )}
+                </Card>
+              ))
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -516,16 +530,24 @@ const Community = () => {
                 <Link to="/news" className="text-decoration-none small">See All</Link>
               </div>
 
-              {news.map(item => (
-                <div key={item.newsPostId} className="mb-3">
-                  <Link to="/news" className="text-dark text-decoration-none bg-white d-block p-2 rounded shadow-sm">
-                    <strong>{item.postTitle}</strong>
-                    <div className="text-muted small mt-1">
-                      {new Date(item.publicationDate).toLocaleDateString()}
-                    </div>
-                  </Link>
-                </div>
-              ))}
+              {loading ? (
+                <>
+                  <NewsSkeleton variant="sidebar" />
+                  <NewsSkeleton variant="sidebar" />
+                  <NewsSkeleton variant="sidebar" />
+                </>
+              ) : (
+                news.map(item => (
+                  <div key={item.newsPostId} className="mb-3">
+                    <Link to="/news" className="text-dark text-decoration-none bg-white d-block p-2 rounded shadow-sm">
+                      <strong>{item.postTitle}</strong>
+                      <div className="text-muted small mt-1">
+                        {new Date(item.publicationDate).toLocaleDateString()}
+                      </div>
+                    </Link>
+                  </div>
+                ))
+              )}
 
               <hr className="my-4" />
 
@@ -660,7 +682,7 @@ const Community = () => {
           <Image src={selectedImage} fluid style={{ maxHeight: '90vh', objectFit: 'contain' }} />
         </Modal.Body>
       </Modal>
-    </div>
+    </div >
   )
 }
 
