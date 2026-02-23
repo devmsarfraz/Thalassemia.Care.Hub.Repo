@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Form, Button, Alert } from 'react-bootstrap'
 import { useAuth } from '../contexts/AuthContext'
@@ -8,7 +8,8 @@ import AuthLayout from '../components/AuthLayout'
 const VerifyEmail = () => {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
-  const { verifyEmail, isLoading } = useAuth()
+  const [resendSecondsLeft, setResendSecondsLeft] = useState(0)
+  const { verifyEmail, resendVerificationEmail, isLoading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   
@@ -42,6 +43,32 @@ const VerifyEmail = () => {
       toast.error(result.message || 'Verification failed')
     }
   }
+
+  const handleResend = async () => {
+    if (!email || resendSecondsLeft > 0) return
+
+    setError('')
+
+    const result = await resendVerificationEmail(email)
+
+    if (result.success) {
+      toast.success(result.message || 'Verification code resent successfully!')
+      setResendSecondsLeft(60)
+    } else {
+      setError(result.message || 'Failed to resend verification code')
+      toast.error(result.message || 'Failed to resend verification code')
+    }
+  }
+
+  useEffect(() => {
+    if (resendSecondsLeft <= 0) return
+
+    const timer = setInterval(() => {
+      setResendSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [resendSecondsLeft])
 
   return (
     <AuthLayout>
@@ -137,21 +164,39 @@ const VerifyEmail = () => {
 
       <div className="text-center">
         <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-          Didn't receive the code?{' '}
+          Didn't receive the code?
+        </p>
+        <div className="d-flex justify-content-center gap-2 mt-2">
+          <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={handleResend}
+            disabled={!email || resendSecondsLeft > 0 || isLoading}
+            style={{
+              borderRadius: '9999px',
+              padding: '6px 16px',
+              fontSize: '13px',
+              fontWeight: '500'
+            }}
+          >
+            {resendSecondsLeft > 0
+              ? `Resend Code (${resendSecondsLeft}s)`
+              : 'Resend Code'}
+          </Button>
           <Button
             variant="link"
             onClick={() => navigate('/login')}
             className="p-0"
             style={{
-              color: '#1e3a8a',
-              fontWeight: '600',
+              color: '#6b7280',
+              fontWeight: '500',
               textDecoration: 'none',
-              fontSize: '14px'
+              fontSize: '13px'
             }}
           >
             Back to Login
           </Button>
-        </p>
+        </div>
       </div>
     </AuthLayout>
   )

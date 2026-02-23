@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -166,6 +166,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.AssociatedUserId).HasColumnName("AssociatedUserID");
             entity.Property(e => e.BloodGroup).HasMaxLength(10);
             entity.Property(e => e.Email).HasMaxLength(200);
+            entity.HasIndex(e => e.Email).IsUnique();
             entity.Property(e => e.FirstName).HasMaxLength(100);
             entity.Property(e => e.Gender).HasMaxLength(10);
             entity.Property(e => e.GuardianName).HasMaxLength(100);

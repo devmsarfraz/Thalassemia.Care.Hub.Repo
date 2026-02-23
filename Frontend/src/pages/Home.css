@@ -1,0 +1,231 @@
+/* ============================================
+   Home Page Animations - Thalassemia Care Hub
+   Scroll-triggered and entrance animations
+   ============================================ */
+
+/* ----- Scroll-triggered base: hidden until in view ----- */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.animate-on-scroll.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children when parent gets in-view */
+.animate-on-scroll-stagger > * {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.animate-on-scroll-stagger.in-view > *:nth-child(1) { transition-delay: 0.05s; }
+.animate-on-scroll-stagger.in-view > *:nth-child(2) { transition-delay: 0.15s; }
+.animate-on-scroll-stagger.in-view > *:nth-child(3) { transition-delay: 0.25s; }
+.animate-on-scroll-stagger.in-view > *:nth-child(4) { transition-delay: 0.35s; }
+.animate-on-scroll-stagger.in-view > *:nth-child(5) { transition-delay: 0.45s; }
+.animate-on-scroll-stagger.in-view > *:nth-child(6) { transition-delay: 0.55s; }
+
+.animate-on-scroll-stagger.in-view > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ----- Section titles: fade up + subtle gradient shine ----- */
+.section-title-animate {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease-out 0.1s, transform 0.6s ease-out 0.1s;
+}
+
+.section-title-animate.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.section-subtitle-animate {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease-out 0.2s, transform 0.5s ease-out 0.2s;
+}
+
+.section-subtitle-animate.in-view,
+.section-title-animate.in-view .section-subtitle-animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ----- Stats cards: scale up + border glow on scroll into view ----- */
+.stats-card-animate {
+  opacity: 0;
+  transform: translateY(36px) scale(0.96);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out,
+              box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+.stats-card-animate.in-view {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.stats-card-animate:hover {
+  box-shadow: 0 12px 28px rgba(102, 126, 234, 0.18);
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* ----- Why Choose / Feature list: slide from left ----- */
+.animate-slide-left {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animate-slide-left.in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ----- How It Works steps: pop in with scale ----- */
+.step-animate {
+  opacity: 0;
+  transform: translateY(24px) scale(0.95);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.step-animate.in-view {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.how-it-works-step:hover .step-icon {
+  transform: scale(1.12) rotate(-3deg);
+  box-shadow: 0 12px 24px rgba(102, 126, 234, 0.35);
+}
+
+.step-number {
+  transition: transform 0.35s ease;
+}
+
+.how-it-works-step:hover .step-number {
+  transform: scale(1.08);
+}
+
+/* ----- Community & Blog cards: fade up + hover lift ----- */
+.card-animate {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.55s ease-out, transform 0.55s ease-out,
+              box-shadow 0.35s ease, transform 0.35s ease;
+}
+
+.card-animate.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.community-post-card:hover,
+.blog-post-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* ----- Testimonials: subtle scale + shadow on scroll ----- */
+.testimonial-animate {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.testimonial-animate.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.testimonial-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 24px 48px rgba(102, 126, 234, 0.12);
+  border-color: rgba(102, 126, 234, 0.25);
+}
+
+/* ----- CTA section: glow pulse and button shine ----- */
+.cta-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 50%
+  );
+  animation: ctaGlow 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ctaGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+.cta-section .btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cta-section .btn:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* ----- Hero: stronger entrance and gradient shift ----- */
+.hero-modern {
+  position: relative;
+}
+
+.hero-modern .hero-highlight {
+  display: inline-block;
+  animation: heroHighlight 3s ease-in-out infinite;
+}
+
+@keyframes heroHighlight {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.15); }
+}
+
+/* ----- Reduce motion for accessibility ----- */
+@media (prefers-reduced-motion: reduce) {
+  .animate-on-scroll,
+  .animate-on-scroll-stagger > *,
+  .section-title-animate,
+  .section-subtitle-animate,
+  .stats-card-animate,
+  .animate-slide-left,
+  .step-animate,
+  .card-animate,
+  .testimonial-animate {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .animate-on-scroll-stagger.in-view > * {
+    opacity: 1;
+    transform: none;
+  }
+
+  .cta-section::before {
+    animation: none;
+  }
+}

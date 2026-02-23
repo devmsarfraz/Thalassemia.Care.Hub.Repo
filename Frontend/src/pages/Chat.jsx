@@ -133,14 +133,15 @@ const Chat = () => {
 
         try {
             let sessionId = currentSessionId
+            const isFirstMessage = !sessionId
 
             if (!sessionId) {
                 const createRes = await chatAPI.createSession({
                     sessionTitle: inputMessage.substring(0, 30) || "New Conversation"
                 })
                 sessionId = createRes.data.chatSessionId
-                setCurrentSessionId(sessionId)
-                fetchSessions()
+                // Don't set currentSessionId yet – wait until after sendMessage succeeds.
+                // Otherwise the history loader runs and overwrites messages with empty history.
             }
 
             const response = await chatAPI.sendMessage(sessionId, { messageContent: userMsg.content })
@@ -163,7 +164,13 @@ const Chat = () => {
                     timestamp: new Date(realUserMsg.timestamp)
                 }
 
-                setMessages(prev => prev.map(m => m.id === tempId ? uiRealUserMsg : m).concat(uiAiMsg))
+                if (isFirstMessage) {
+                    // First message: set both user and AI messages, then attach to session
+                    setMessages([uiRealUserMsg, uiAiMsg])
+                    setCurrentSessionId(sessionId)
+                } else {
+                    setMessages(prev => prev.map(m => m.id === tempId ? uiRealUserMsg : m).concat(uiAiMsg))
+                }
                 fetchSessions()
             } else {
                 console.error("Failed to send message", response.data)

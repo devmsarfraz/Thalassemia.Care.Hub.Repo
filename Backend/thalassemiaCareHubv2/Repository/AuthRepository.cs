@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.EntityFrameworkCore;
 using thalassemiaCareHubv2.DTOs;
 using thalassemiaCareHubv2.Interface;
@@ -15,9 +15,12 @@ namespace thalassemiaCareHubv2.Repository
             _context = context;
         }
 
+        private static string NormalizeEmail(string? email) => email?.Trim().ToLowerInvariant() ?? "";
+
         public async Task<bool> UserExists(string email)
         {
-            bool exists = await _context.Users.AnyAsync(x => x.Email == email && !x.IsDelete);
+            var normalized = NormalizeEmail(email);
+            bool exists = await _context.Users.AnyAsync(x => x.Email != null && x.Email.ToLower() == normalized && !x.IsDelete);
             return exists;
         }
 
@@ -29,8 +32,9 @@ namespace thalassemiaCareHubv2.Repository
         }
         public async Task<User?> GetUserByEmail(string email)
         {
+            var normalized = NormalizeEmail(email);
             return await _context.Users
-                  .Where(u => u.Email == email && u.IsDelete == false)
+                  .Where(u => u.Email != null && u.Email.ToLower() == normalized && u.IsDelete == false)
                 .Select(u => new User { UserId = u.UserId, Email = u.Email, Password = u.Password })
                 .FirstOrDefaultAsync();
         }
@@ -46,8 +50,9 @@ namespace thalassemiaCareHubv2.Repository
         {
             try
             {
+                var normalized = NormalizeEmail(email);
                 var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == email && !u.IsDelete);
+                    .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == normalized && !u.IsDelete);
 
                 if (user == null)
                     return false;
@@ -69,8 +74,9 @@ namespace thalassemiaCareHubv2.Repository
 
         public async Task<User?> GetUserByEmailForVerification(string email)
         {
+            var normalized = NormalizeEmail(email);
             return await _context.Users
-                .Where(u => u.Email == email && !u.IsDelete)
+                .Where(u => u.Email != null && u.Email.ToLower() == normalized && !u.IsDelete)
                 .FirstOrDefaultAsync();
         }
 
@@ -78,8 +84,9 @@ namespace thalassemiaCareHubv2.Repository
         {
             try
             {
+                var normalized = NormalizeEmail(email);
                 var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == email && !u.IsDelete);
+                    .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == normalized && !u.IsDelete);
 
                 if (user == null)
                     return false;
@@ -105,8 +112,9 @@ namespace thalassemiaCareHubv2.Repository
         {
             try
             {
+                var normalized = NormalizeEmail(email);
                 var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == email && !u.IsDelete);
+                    .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == normalized && !u.IsDelete);
 
                 if (user == null)
                     return false;
@@ -126,8 +134,9 @@ namespace thalassemiaCareHubv2.Repository
         {
             try
             {
+                var normalized = NormalizeEmail(email);
                 var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == email && !u.IsDelete);
+                    .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == normalized && !u.IsDelete);
 
                 if (user == null)
                     return false;
@@ -148,8 +157,9 @@ namespace thalassemiaCareHubv2.Repository
         {
             try
             {
+                var normalized = NormalizeEmail(email);
                 var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == email && !u.IsDelete);
+                    .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == normalized && !u.IsDelete);
 
                 if (user == null)
                     return false;

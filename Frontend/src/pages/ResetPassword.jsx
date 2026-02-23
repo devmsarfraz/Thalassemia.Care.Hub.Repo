@@ -10,6 +10,7 @@ const ResetPassword = () => {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
     const navigate = useNavigate()
@@ -117,14 +118,15 @@ const ResetPassword = () => {
                             alignItems: 'center',
                             color: '#6b7280'
                         }}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                         {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
                     </button>
                 </Form.Group>
 
-                <Form.Group className="mb-4">
+                <Form.Group className="mb-4" style={{ position: 'relative' }}>
                     <Form.Control
-                        type={showPassword ? 'text' : 'password'}
+                        type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="Confirm New Password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -132,11 +134,31 @@ const ResetPassword = () => {
                         style={{
                             borderRadius: '8px',
                             border: '1px solid #d1d5db',
-                            padding: '12px 16px',
+                            padding: '12px 45px 12px 16px',
                             fontSize: '16px',
                             backgroundColor: '#ffffff'
                         }}
                     />
+                    <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        style={{
+                            position: 'absolute',
+                            right: '12px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            padding: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            color: '#6b7280'
+                        }}
+                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                        {showConfirmPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                    </button>
                 </Form.Group>
 
                 <Button

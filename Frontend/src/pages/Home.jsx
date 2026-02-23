@@ -1,18 +1,67 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { postsAPI, newsAPI } from '../services/api'
 import { FaRobot, FaUsers, FaNewspaper, FaHeart, FaUserPlus, FaComments, FaLightbulb, FaBell, FaCheckCircle, FaQuoteLeft, FaArrowRight, FaClock, FaUser } from 'react-icons/fa'
+import './Home.css'
 
 const Home = () => {
   const { isAuthenticated } = useAuth()
+
+  const statsSectionRef = useRef(null)
+  const whyChooseTextRef = useRef(null)
+  const whyChooseCardRef = useRef(null)
+  const howItWorksTitleRef = useRef(null)
+  const howItWorksStepsRef = useRef(null)
+  const communityTitleRef = useRef(null)
+  const communityCardsRef = useRef(null)
+  const testimonialsTitleRef = useRef(null)
+  const testimonialsCardsRef = useRef(null)
+  const blogTitleRef = useRef(null)
+  const blogCardsRef = useRef(null)
+  const ctaRef = useRef(null)
   const [communityPosts, setCommunityPosts] = useState([])
   const [blogPosts, setBlogPosts] = useState([])
   const [filteredBlogPosts, setFilteredBlogPosts] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [isLoadingPosts, setIsLoadingPosts] = useState(true)
   const [isLoadingBlogs, setIsLoadingBlogs] = useState(true)
+
+  // Scroll-triggered animation observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view')
+          }
+        })
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    )
+
+    const refs = [
+      statsSectionRef,
+      whyChooseTextRef,
+      whyChooseCardRef,
+      howItWorksTitleRef,
+      howItWorksStepsRef,
+      communityTitleRef,
+      communityCardsRef,
+      testimonialsTitleRef,
+      testimonialsCardsRef,
+      blogTitleRef,
+      blogCardsRef,
+      ctaRef
+    ]
+
+    refs.forEach((ref) => {
+      if (ref.current) observer.observe(ref.current)
+    })
+
+    return () => observer.disconnect()
+  }, [isLoadingPosts, isLoadingBlogs])
 
   // Fetch community posts
   useEffect(() => {
@@ -80,7 +129,7 @@ const Home = () => {
             <Row className="align-items-center min-vh-50 py-5">
               <Col lg={6} className="hero-text-content">
                 <h1 className="display-3 fw-bold mb-4" style={{ lineHeight: '1.2' }}>
-                  Welcome to <span className="text-warning">Thalassemia</span> Care Hub
+                  Welcome to <span className="text-warning hero-highlight">Thalassemia</span> Care Hub
                 </h1>
                 <p className="lead mb-4" style={{ fontSize: '1.25rem', opacity: 0.95 }}>
                   Your supportive community platform connecting patients, caregivers, and healthcare professionals
@@ -128,26 +177,26 @@ const Home = () => {
       {/* Statistics Section */}
       <section className="py-5" style={{ background: 'var(--bg-primary)' }}>
         <Container>
-          <Row className="g-4">
-            <Col md={3} sm={6} className="fade-in">
+          <Row ref={statsSectionRef} className="g-4 animate-on-scroll-stagger">
+            <Col md={3} sm={6}>
               <div className="stats-card text-center">
                 <div className="stats-number">500+</div>
                 <p className="text-muted mb-0 fw-semibold">Active Users</p>
               </div>
             </Col>
-            <Col md={3} sm={6} className="fade-in" style={{ animationDelay: '0.1s' }}>
+            <Col md={3} sm={6}>
               <div className="stats-card text-center" style={{ borderLeftColor: 'var(--accent-green)' }}>
                 <div className="stats-number">1,200+</div>
                 <p className="text-muted mb-0 fw-semibold">Community Posts</p>
               </div>
             </Col>
-            <Col md={3} sm={6} className="fade-in" style={{ animationDelay: '0.2s' }}>
+            <Col md={3} sm={6}>
               <div className="stats-card text-center" style={{ borderLeftColor: 'var(--accent-blue)' }}>
                 <div className="stats-number">3,500+</div>
                 <p className="text-muted mb-0 fw-semibold">AI Chat Sessions</p>
               </div>
             </Col>
-            <Col md={3} sm={6} className="fade-in" style={{ animationDelay: '0.3s' }}>
+            <Col md={3} sm={6}>
               <div className="stats-card text-center" style={{ borderLeftColor: 'var(--accent-pink)' }}>
                 <div className="stats-number">98%</div>
                 <p className="text-muted mb-0 fw-semibold">Satisfaction Rate</p>
@@ -161,7 +210,7 @@ const Home = () => {
       <section className="section-modern" style={{ background: 'var(--bg-secondary)' }}>
         <Container>
           <Row className="align-items-center">
-            <Col lg={6} className="fade-in mb-4 mb-lg-0">
+            <Col ref={whyChooseTextRef} lg={6} className="animate-slide-left mb-4 mb-lg-0">
               <h2 className="section-title gradient-text">Why Choose Thalassemia Care Hub?</h2>
               <p className="lead text-muted mb-4">
                 We understand the challenges of living with thalassemia. Our platform is designed to provide comprehensive support, reliable information, and a caring community.
@@ -190,7 +239,7 @@ const Home = () => {
                 </div>
               </div>
             </Col>
-            <Col lg={6} className="slide-up">
+            <Col ref={whyChooseCardRef} lg={6} className="animate-on-scroll">
               <div className="modern-card p-4" style={{ background: 'var(--primary-gradient)', color: 'white' }}>
                 <Row className="g-3">
                   <Col xs={6}>
@@ -227,14 +276,14 @@ const Home = () => {
       {/* How It Works Section */}
       <section className="section-modern">
         <Container>
-          <div className="text-center mb-5">
+          <div ref={howItWorksTitleRef} className="text-center mb-5 section-title-animate">
             <h2 className="section-title gradient-text">How It Works</h2>
-            <p className="section-subtitle">
+            <p className="section-subtitle section-subtitle-animate">
               Get started in four simple steps
             </p>
           </div>
-          <Row className="g-4">
-            <Col md={3} sm={6} className="fade-in">
+          <Row ref={howItWorksStepsRef} className="g-4 animate-on-scroll-stagger">
+            <Col md={3} sm={6}>
               <div className="how-it-works-step text-center">
                 <div className="step-number mx-auto mb-3">1</div>
                 <div className="step-icon mx-auto mb-3">
@@ -244,7 +293,7 @@ const Home = () => {
                 <p className="text-muted mb-0">Create your account in seconds with just your email</p>
               </div>
             </Col>
-            <Col md={3} sm={6} className="fade-in" style={{ animationDelay: '0.1s' }}>
+            <Col md={3} sm={6}>
               <div className="how-it-works-step text-center">
                 <div className="step-number mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>2</div>
                 <div className="step-icon mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
@@ -254,7 +303,7 @@ const Home = () => {
                 <p className="text-muted mb-0">Connect with others and share your experiences</p>
               </div>
             </Col>
-            <Col md={3} sm={6} className="fade-in" style={{ animationDelay: '0.2s' }}>
+            <Col md={3} sm={6}>
               <div className="how-it-works-step text-center">
                 <div className="step-number mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>3</div>
                 <div className="step-icon mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
@@ -264,7 +313,7 @@ const Home = () => {
                 <p className="text-muted mb-0">Ask questions and get instant expert answers</p>
               </div>
             </Col>
-            <Col md={3} sm={6} className="fade-in" style={{ animationDelay: '0.3s' }}>
+            <Col md={3} sm={6}>
               <div className="how-it-works-step text-center">
                 <div className="step-number mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>4</div>
                 <div className="step-icon mx-auto mb-3" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
@@ -283,9 +332,9 @@ const Home = () => {
       {/* Community Posts Section */}
       <section className="section-modern">
         <Container>
-          <div className="text-center mb-5">
+          <div ref={communityTitleRef} className="text-center mb-5 section-title-animate">
             <h2 className="section-title gradient-text">Community Highlights</h2>
-            <p className="section-subtitle">
+            <p className="section-subtitle section-subtitle-animate">
               Recent posts from our community members
             </p>
           </div>
@@ -297,9 +346,9 @@ const Home = () => {
             </div>
           ) : communityPosts.length > 0 ? (
             <>
-              <Row className="g-4">
-                {communityPosts.map((post, index) => (
-                  <Col md={4} key={post.postId} className="fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+              <Row ref={communityCardsRef} className="g-4 animate-on-scroll-stagger">
+                {communityPosts.map((post) => (
+                  <Col md={4} key={post.postId}>
                     <div className="community-post-card">
                       <div className="d-flex align-items-center mb-3">
                         <div className="post-avatar me-2">
@@ -355,14 +404,14 @@ const Home = () => {
       {/* Testimonials Section */}
       <section className="section-modern">
         <Container>
-          <div className="text-center mb-5">
+          <div ref={testimonialsTitleRef} className="text-center mb-5 section-title-animate">
             <h2 className="section-title gradient-text">What Our Community Says</h2>
-            <p className="section-subtitle">
+            <p className="section-subtitle section-subtitle-animate">
               Real stories from real people in our community
             </p>
           </div>
-          <Row className="g-4">
-            <Col md={4} className="fade-in">
+          <Row ref={testimonialsCardsRef} className="g-4 animate-on-scroll-stagger">
+            <Col md={4}>
               <div className="testimonial-card">
                 <div className="quote-icon mb-3">
                   <FaQuoteLeft />
@@ -381,7 +430,7 @@ const Home = () => {
                 </div>
               </div>
             </Col>
-            <Col md={4} className="fade-in" style={{ animationDelay: '0.1s' }}>
+            <Col md={4}>
               <div className="testimonial-card">
                 <div className="quote-icon mb-3">
                   <FaQuoteLeft />
@@ -400,7 +449,7 @@ const Home = () => {
                 </div>
               </div>
             </Col>
-            <Col md={4} className="fade-in" style={{ animationDelay: '0.2s' }}>
+            <Col md={4}>
               <div className="testimonial-card">
                 <div className="quote-icon mb-3">
                   <FaQuoteLeft />
@@ -426,9 +475,9 @@ const Home = () => {
       {/* Blog/News Section */}
       <section className="section-modern" style={{ background: 'var(--bg-secondary)' }}>
         <Container>
-          <div className="text-center mb-4">
+          <div ref={blogTitleRef} className="text-center mb-4 section-title-animate">
             <h2 className="section-title gradient-text">Latest Blog & News</h2>
-            <p className="section-subtitle">
+            <p className="section-subtitle section-subtitle-animate">
               Stay updated with the latest research and insights
             </p>
           </div>
@@ -462,9 +511,9 @@ const Home = () => {
             </div>
           ) : filteredBlogPosts.length > 0 ? (
             <>
-              <Row className="g-4">
-                {filteredBlogPosts.slice(0, 6).map((post, index) => (
-                  <Col md={4} key={post.newsPostId} className="fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+              <Row ref={blogCardsRef} className="g-4 animate-on-scroll-stagger">
+                {filteredBlogPosts.slice(0, 6).map((post) => (
+                  <Col md={4} key={post.newsPostId}>
                     <div className="blog-post-card h-100">
                       {post.mediaUrl && (
                         <div className="blog-post-image">
@@ -515,8 +564,8 @@ const Home = () => {
 
       {/* Modern Call to Action */}
       {!isAuthenticated && (
-        <section className="py-5" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-          <Container className="text-center text-white">
+        <section ref={ctaRef} className="cta-section py-5 animate-on-scroll" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+          <Container className="text-center text-white" style={{ position: 'relative', zIndex: 1 }}>
             <h2 className="display-5 fw-bold mb-3">Join Our Community Today!</h2>
             <p className="lead mb-4" style={{ opacity: 0.95 }}>
               Connect with others, get support, and stay informed about thalassemia care.

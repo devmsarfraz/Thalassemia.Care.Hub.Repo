@@ -1,4 +1,4 @@
-﻿using thalassemiaCareHubv2.DTOs;
+using thalassemiaCareHubv2.DTOs;
 namespace thalassemiaCareHubv2.Interface
 {
     public interface IAuthService
@@ -7,6 +7,7 @@ namespace thalassemiaCareHubv2.Interface
         Task<LoginResult> Login(string email, string password);
         Task<bool> UpdatePassword(string email, string currentPassword, string newPassword);
         Task<VerifyEmailResult> VerifyEmail(string email, string code);
+        Task<VerifyEmailResult> ResendVerificationEmail(string email);
         Task<bool> ForgotPassword(string email);
         Task<bool> VerifyResetCode(string email, string code);
         Task<bool> ResetPassword(string email, string newPassword);

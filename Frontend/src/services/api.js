@@ -43,6 +43,7 @@ export const authAPI = {
   logout: () => api.post('/auth/logout'),
   updatePassword: (data) => api.post('/auth/update-password', data),
   verifyEmail: (data) => api.post('/auth/verify-email', data),
+  resendVerificationEmail: (data) => api.post('/auth/resend-verification-email', data),
   forgotPassword: (data) => api.post('/auth/forgot-password', data),
   verifyResetCode: (data) => api.post('/auth/verify-reset-code', data),
   resetPassword: (data) => api.post('/auth/reset-password', data)

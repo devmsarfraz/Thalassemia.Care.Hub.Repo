@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -46,7 +46,7 @@ namespace thalassemiaCareHubv2.Controllers
         {
             try
             {
-                var user = await _authService.Signup(
+                var result = await _authService.Signup(
                     request.Email,
                     request.Password,
                     request.FirstName,
@@ -57,7 +57,9 @@ namespace thalassemiaCareHubv2.Controllers
                     request.RoleID
                     );
 
-                Console.WriteLine($"Email {request.Email}");
+                if (!result.Success)
+                    return BadRequest(new { message = result.Message });
+
                 return Ok(new { message = "Signup Successful" });
             }
             catch (Exception ex)
@@ -195,6 +197,38 @@ namespace thalassemiaCareHubv2.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { message = $"Error verifying email: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Resend email verification code
+        /// </summary>
+        /// <param name="request">Request containing email</param>
+        /// <returns>Result of resend operation</returns>
+        [HttpPost("resend-verification-email")]
+        [ProducesResponseType(typeof(VerifyEmailResult), 200)]
+        [ProducesResponseType(typeof(object), 400)]
+        public async Task<ActionResult> ResendVerificationEmail([FromBody] ForgotPasswordRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Email))
+                {
+                    return BadRequest(new { message = "Email is required." });
+                }
+
+                var result = await _authService.ResendVerificationEmail(request.Email);
+
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+
+                return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"Error resending verification email: {ex.Message}" });
             }
         }
         /// <summary>

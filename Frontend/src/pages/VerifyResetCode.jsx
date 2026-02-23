@@ -9,6 +9,7 @@ const VerifyResetCode = () => {
     const [code, setCode] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
+    const [resendSecondsLeft, setResendSecondsLeft] = useState(0)
     const navigate = useNavigate()
     const location = useLocation()
     const email = location.state?.email
@@ -19,6 +20,16 @@ const VerifyResetCode = () => {
             navigate('/forgot-password')
         }
     }, [email, navigate])
+
+    useEffect(() => {
+        if (resendSecondsLeft <= 0) return
+
+        const timer = setInterval(() => {
+            setResendSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0))
+        }, 1000)
+
+        return () => clearInterval(timer)
+    }, [resendSecondsLeft])
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -37,6 +48,25 @@ const VerifyResetCode = () => {
         } catch (err) {
             setError(err.response?.data?.message || err.message || 'Verification failed')
             toast.error(err.response?.data?.message || err.message || 'Verification failed')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleResend = async () => {
+        if (!email || resendSecondsLeft > 0) return
+
+        setError('')
+        setIsLoading(true)
+
+        try {
+            await authAPI.forgotPassword({ email })
+            toast.success('A new reset code has been sent to your email.')
+            setResendSecondsLeft(60)
+        } catch (err) {
+            const message = err.response?.data?.message || err.message || 'Failed to resend code'
+            setError(message)
+            toast.error(message)
         } finally {
             setIsLoading(false)
         }
@@ -134,6 +164,29 @@ const VerifyResetCode = () => {
                     )}
                 </Button>
             </Form>
+            <div className="text-center mt-2">
+                <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
+                    Didn't receive the code?
+                </p>
+                <div className="d-flex justify-content-center gap-2 mt-2">
+                    <Button
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={handleResend}
+                        disabled={!email || resendSecondsLeft > 0 || isLoading}
+                        style={{
+                            borderRadius: '9999px',
+                            padding: '6px 16px',
+                            fontSize: '13px',
+                            fontWeight: '500'
+                        }}
+                    >
+                        {resendSecondsLeft > 0
+                            ? `Resend Code (${resendSecondsLeft}s)`
+                            : 'Resend Code'}
+                    </Button>
+                </div>
+            </div>
         </AuthLayout>
     )
 }

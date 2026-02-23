@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.AspNetCore.Mvc;
 using thalassemiaCareHubv2.Interface;
 using thalassemiaCareHubv2.Models;
@@ -24,8 +24,17 @@ namespace thalassemiaCareHubv2.Services
 
         public async Task<SignupResult> Signup(string email, string password, string firstName, string lastName, string? phoneNumber, string? address, string? bloodGroup, int roleID)
         {
+            var normalizedEmail = email?.Trim().ToLowerInvariant() ?? "";
+            if (string.IsNullOrWhiteSpace(normalizedEmail))
+            {
+                return new SignupResult
+                {
+                    Success = false,
+                    Message = "Email is required."
+                };
+            }
 
-            bool exists = await _authRepository.UserExists(email);
+            bool exists = await _authRepository.UserExists(normalizedEmail);
 
             if (!exists) {
 
@@ -38,7 +47,7 @@ namespace thalassemiaCareHubv2.Services
 
                 var user = new User
                 {
-                    Email = email,
+                    Email = normalizedEmail,
                     Password = hashedPassword, // Store hashed password instead of plain text
                     FirstName = firstName,
                     LastName = lastName,
@@ -55,7 +64,7 @@ namespace thalassemiaCareHubv2.Services
                 // Send verification email
                 try
                 {
-                    bool emailSent = await _emailService.SendVerificationEmailAsync(email, firstName, verificationCode);
+                    bool emailSent = await _emailService.SendVerificationEmailAsync(normalizedEmail, firstName, verificationCode);
                     if (!emailSent)
                     {
                         Console.WriteLine($"Warning: Failed to send verification email to {email}, but user was created successfully.");
@@ -78,7 +87,7 @@ namespace thalassemiaCareHubv2.Services
             return new SignupResult
             {
                 Success = false,
-                Message = "User with this email already exists."
+                Message = "Use a different email, this email already exists."
             };
         }
 
@@ -233,6 +242,81 @@ namespace thalassemiaCareHubv2.Services
             };
         }
 
+        public async Task<VerifyEmailResult> ResendVerificationEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return new VerifyEmailResult
+                {
+                    Success = false,
+                    Message = "Email is required."
+                };
+            }
+
+            var user = await _authRepository.GetUserByEmailForVerification(email);
+
+            if (user == null)
+            {
+                return new VerifyEmailResult
+                {
+                    Success = false,
+                    Message = "User not found."
+                };
+            }
+
+            if (user.Verified == true)
+            {
+                return new VerifyEmailResult
+                {
+                    Success = false,
+                    Message = "Email is already verified."
+                };
+            }
+
+            var random = new Random();
+            int verificationCode = random.Next(100000, 999999);
+
+            var updated = await _authRepository.UpdateResetCode(email, verificationCode);
+
+            if (!updated)
+            {
+                return new VerifyEmailResult
+                {
+                    Success = false,
+                    Message = "Failed to generate new verification code."
+                };
+            }
+
+            try
+            {
+                var emailSent = await _emailService.SendVerificationEmailAsync(email, user.FirstName ?? string.Empty, verificationCode);
+
+                if (!emailSent)
+                {
+                    return new VerifyEmailResult
+                    {
+                        Success = false,
+                        Message = "Failed to send verification email. Please try again later."
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error resending verification email to {email}: {ex.Message}");
+                return new VerifyEmailResult
+                {
+                    Success = false,
+                    Message = "An error occurred while sending verification email."
+                };
+            }
+
+            return new VerifyEmailResult
+            {
+                Success = true,
+                Message = "A new verification code has been sent to your email."
+            };
+        }
+
         public async Task<bool> ForgotPassword(string email)
         {
             var user = await _authRepository.GetUserByEmailForVerification(email);
@@ -259,9 +343,7 @@ namespace thalassemiaCareHubv2.Services
             // Send reset email
             try
             {
-                // We need the user's first name, which we can get from the user object if we fetched it, 
-                // but GetUserByEmailForVerification returns a User object.
-                // Assuming it has FirstName populated.
+
                 
                 return await _emailService.SendPasswordResetEmailAsync(email, user.FirstName, resetCode);
             }

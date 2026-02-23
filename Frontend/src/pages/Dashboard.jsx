@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Container, Row, Col, Card, Button, Badge, ListGroup, ProgressBar } from 'react-bootstrap'
 import { Link, Navigate } from 'react-router-dom'
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 import { useAuth } from '../contexts/AuthContext'
 import { postsAPI, newsAPI, chatAPI } from '../services/api'
 import {
@@ -14,7 +16,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     totalPosts: 0,
     userPosts: 0,
-    totalComments: 0,
+    totalLikes: 0,
     aiChats: 0
   })
   const [recentPosts, setRecentPosts] = useState([])
@@ -48,8 +50,8 @@ const Dashboard = () => {
         setStats({
           totalPosts: allPosts.length,
           userPosts: userPostsCount,
-          totalComments: allPosts.reduce((acc, post) => acc + (post.comments?.length || 0), 0),
-          aiChats: chatCount // NOW DYNAMIC!
+          totalLikes: allPosts.reduce((acc, post) => acc + (post.likeCount || 0), 0),
+          aiChats: chatCount
         })
 
         // Get recent posts (latest 3)
@@ -94,6 +96,21 @@ const Dashboard = () => {
 
   const currentTip = healthTips[new Date().getDate() % healthTips.length]
 
+  const StatCardSkeleton = () => (
+    <Card className="h-100 border-0 shadow-sm">
+      <Card.Body>
+        <div className="d-flex justify-content-between align-items-start">
+          <div className="flex-grow-1">
+            <Skeleton width={80} height={14} className="mb-2" />
+            <Skeleton width={48} height={32} className="mb-2" />
+            <Skeleton width={100} height={12} />
+          </div>
+          <Skeleton width={48} height={48} borderRadius={12} />
+        </div>
+      </Card.Body>
+    </Card>
+  )
+
   return (
     <Container className="py-4">
       {/* Welcome Banner */}
@@ -130,138 +147,150 @@ const Dashboard = () => {
 
       {/* Statistics Cards */}
       <Row className="g-4 mb-4">
-        <Col md={3} sm={6}>
-          <Card className="h-100 border-0 shadow-sm" style={{
-            borderLeft: '4px solid #667eea',
-            transition: 'all 0.3s ease'
-          }}>
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <p className="text-muted mb-1 small">Your Posts</p>
-                  <h3 className="mb-0 fw-bold">{stats.userPosts}</h3>
-                </div>
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white'
-                }}>
-                  <FaComments size={24} />
-                </div>
-              </div>
-              <div className="mt-2">
-                <small className="text-success">
-                  <FaChartLine className="me-1" />
-                  Active contributor
-                </small>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+        {loading ? (
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <Col key={i} md={3} sm={6}>
+                <StatCardSkeleton />
+              </Col>
+            ))}
+          </>
+        ) : (
+          <>
+            <Col md={3} sm={6}>
+              <Card className="h-100 border-0 shadow-sm" style={{
+                borderLeft: '4px solid #667eea',
+                transition: 'all 0.3s ease'
+              }}>
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div>
+                      <p className="text-muted mb-1 small">Your Posts</p>
+                      <h3 className="mb-0 fw-bold">{stats.userPosts}</h3>
+                    </div>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white'
+                    }}>
+                      <FaComments size={24} />
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <small className="text-success">
+                      <FaChartLine className="me-1" />
+                      Active contributor
+                    </small>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
 
-        <Col md={3} sm={6}>
-          <Card className="h-100 border-0 shadow-sm" style={{
-            borderLeft: '4px solid #10b981',
-            transition: 'all 0.3s ease'
-          }}>
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <p className="text-muted mb-1 small">Community Posts</p>
-                  <h3 className="mb-0 fw-bold">{stats.totalPosts}</h3>
-                </div>
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white'
-                }}>
-                  <FaUsers size={24} />
-                </div>
-              </div>
-              <div className="mt-2">
-                <small className="text-muted">
-                  Total discussions
-                </small>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+            <Col md={3} sm={6}>
+              <Card className="h-100 border-0 shadow-sm" style={{
+                borderLeft: '4px solid #10b981',
+                transition: 'all 0.3s ease'
+              }}>
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div>
+                      <p className="text-muted mb-1 small">Community Posts</p>
+                      <h3 className="mb-0 fw-bold">{stats.totalPosts}</h3>
+                    </div>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white'
+                    }}>
+                      <FaUsers size={24} />
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <small className="text-muted">
+                      Total discussions
+                    </small>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
 
-        <Col md={3} sm={6}>
-          <Card className="h-100 border-0 shadow-sm" style={{
-            borderLeft: '4px solid #3b82f6',
-            transition: 'all 0.3s ease'
-          }}>
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <p className="text-muted mb-1 small">AI Chat Sessions</p>
-                  <h3 className="mb-0 fw-bold">{stats.aiChats}</h3>
-                </div>
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white'
-                }}>
-                  <FaRobot size={24} />
-                </div>
-              </div>
-              <div className="mt-2">
-                <small className="text-muted">
-                  Questions answered
-                </small>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+            <Col md={3} sm={6}>
+              <Card className="h-100 border-0 shadow-sm" style={{
+                borderLeft: '4px solid #3b82f6',
+                transition: 'all 0.3s ease'
+              }}>
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div>
+                      <p className="text-muted mb-1 small">AI Chat Sessions</p>
+                      <h3 className="mb-0 fw-bold">{stats.aiChats}</h3>
+                    </div>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white'
+                    }}>
+                      <FaRobot size={24} />
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <small className="text-muted">
+                      Questions answered
+                    </small>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
 
-        <Col md={3} sm={6}>
-          <Card className="h-100 border-0 shadow-sm" style={{
-            borderLeft: '4px solid #f59e0b',
-            transition: 'all 0.3s ease'
-          }}>
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <p className="text-muted mb-1 small">Total Comments</p>
-                  <h3 className="mb-0 fw-bold">{stats.totalComments}</h3>
-                </div>
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white'
-                }}>
-                  <FaHeart size={24} />
-                </div>
-              </div>
-              <div className="mt-2">
-                <small className="text-muted">
-                  Community engagement
-                </small>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+            <Col md={3} sm={6}>
+              <Card className="h-100 border-0 shadow-sm" style={{
+                borderLeft: '4px solid #f59e0b',
+                transition: 'all 0.3s ease'
+              }}>
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div>
+                      <p className="text-muted mb-1 small">Total Likes</p>
+                      <h3 className="mb-0 fw-bold">{stats.totalLikes}</h3>
+                    </div>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white'
+                    }}>
+                      <FaHeart size={24} />
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <small className="text-muted">
+                      Community support
+                    </small>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </>
+        )}
       </Row>
 
       <Row className="g-4">
@@ -344,10 +373,16 @@ const Dashboard = () => {
             </Card.Header>
             <Card.Body>
               {loading ? (
-                <div className="text-center py-4">
-                  <div className="spinner-border spinner-border-sm text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
+                <div className="d-flex flex-column gap-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="d-flex align-items-start">
+                      <Skeleton circle width={40} height={40} className="me-3 flex-shrink-0" />
+                      <div className="flex-grow-1">
+                        <Skeleton width="75%" height={18} className="mb-2" />
+                        <Skeleton width="50%" height={14} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <ListGroup variant="flush">
@@ -435,10 +470,16 @@ const Dashboard = () => {
             </Card.Header>
             <Card.Body>
               {loading ? (
-                <div className="text-center py-3">
-                  <div className="spinner-border spinner-border-sm text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
+                <div className="d-flex flex-column gap-3">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="d-flex align-items-start">
+                      <Skeleton width={8} height={8} className="mt-2 me-3 flex-shrink-0" style={{ borderRadius: '50%' }} />
+                      <div className="flex-grow-1">
+                        <Skeleton width="90%" height={18} className="mb-1" />
+                        <Skeleton width={80} height={14} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : recentNews.length > 0 ? (
                 <div className="d-flex flex-column gap-3">
@@ -455,7 +496,7 @@ const Dashboard = () => {
                       }} />
                       <div>
                         <Link
-                          to={`/ news / ${news.newsPostId} `}
+                          to={`/news/${news.newsPostId}`}
                           className="text-decoration-none text-dark fw-semibold"
                         >
                           {news.postTitle?.substring(0, 80)}
